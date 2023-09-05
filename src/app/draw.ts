@@ -4,24 +4,22 @@ let drawBackground = function (ctx) {
 }
 let drawRoad = function (road, ctx) {
     road.segments.forEach((segment) => {
-        if (segment.type = "straight") {
-            ctx.beginPath();
-            ctx.moveTo(...segment.start);
-            ctx.lineTo(...segment.end);
-            ctx.stroke();
-        }
+        segment.drawSegment(ctx)
+    })
+}
+
+let drawVehicles = function (road, ctx) {
+    ctx.fillStyle = "orange";
+    road.vehicles.forEach((vehicle) => {
+        road.segments[vehicle.segment].drawVehicle(vehicle, ctx)
     })
 
 }
-let drawVehicles = function (road, ctx) {
-    ctx.fillStyle = "red";
-    road.vehicles.forEach((vehicle) => {
 
-        ctx.beginPath();
-        ctx.arc(vehicle.position, 100, 10, 0, 2 * Math.PI);
-        ctx.fill();
-    })
+export function draw_init(road) {
 
+
+    
 }
 
 export function draw(road,ctx) {
