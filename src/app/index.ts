@@ -68,10 +68,15 @@ return (v0<0.00001) ? 0
 : Math.max(-bmax, accFree + accInt + accNoise);
 }
 
+//this is where the Intelligent Driver Model(IDM) is implemented
 function update(road) {
+
+//spawn new vehicles
     if (rand() > 0.95 && (road.vehicles.length == 0 || road.vehicles[road.vehicles.length-1].position > 60)) {
         road.newVehicle(rand);
     }
+
+//update each vehicle with new position/speed/acceleration based on IDM
     road.vehicles.forEach((veh,i,vehicles)=> {
         let s = i >0 ? vehicles[i-1].position - vehicles[i-1].len - veh.position : 1000000;
         let leadSpeed = i > 0 ? vehicles[i-1].speed : 0;
@@ -96,20 +101,6 @@ function main_loop() {
     draw(road,ctx);
     update(road);
 }
-
-
-
-/*
-draw Road with vehicles
-*/
-
-/*
-calculate speed of each vehicle
-*/
-
-/*
-calculate new position of each vehicle
-*/
 
 
 var myRun =setInterval(main_loop, 1000/fps); 

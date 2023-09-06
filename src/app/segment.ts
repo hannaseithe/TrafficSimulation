@@ -83,15 +83,7 @@ function segments(points,ctx) {
 
   
   //b is parameterized curve b()[0] -> x-values/ b()[1] -> y-values
-
-  //TODO: Es wäre besser wenn hier direkt auf die Punkte des Objekts zugriffen wird, 
-  //weil wenn die Werte sich zur Laufzeit ändern sollten (Straßen werden verformt oder so),
-  //dann funktioniert das hier nicht mehr
   
-  function b_con(Points) {
-    return t => [Math.pow((1-t),3)*Points[0][0]+3*t*Math.pow((1-t),2)*Points[1][0]+3*Math.pow(t,2)*(1-t)*Points[2][0]+Math.pow(t,3)*Points[3][0], 
-    Math.pow((1-t),3)*Points[0][1]+3*t*Math.pow((1-t),2)*Points[1][1]+3*Math.pow(t,2)*(1-t)*Points[2][1]+Math.pow(t,3)*Points[3][1]]
-  }
 
  //constructor of approximation function of derivative of f, returns function for approximation
 function derivative_con(f) {
@@ -108,15 +100,69 @@ function derivative_con(f) {
   
 
 export class BezierSegment extends Segment {
+    points;
     constructor(config) {
         super(config);
+        this.points
         this.arclength = this.arcLength(1)
     }
-    arcLength(t) {
-        return t*Math.sqrt(Math.pow(this.end[0]-this.start[0],2)+Math.pow(this.end[1]-this.start[1],2))
-    }
 
-    b(t) = 
+    b(t) {
+        return [Math.pow((1-t),3)*this.start[0]+3*t*Math.pow((1-t),2)*this.points[0][0]+3*Math.pow(t,2)*(1-t)*this.points[1][0]+Math.pow(t,3)*this.end[0], 
+        Math.pow((1-t),3)*this.start[1]+3*t*Math.pow((1-t),2)*this.points[0][1]+3*Math.pow(t,2)*(1-t)*this.points[1][1]+Math.pow(t,3)*this.end[1]]
+    } 
+
+   invert_arcl(s)
+{
+  //initial t
+  let t =  s / this.arclength ;
+  let lowerBound = 0; 
+  let upperBound = 1;
+
+  for (let i = 0; i < 25; ++i)
+  {
+    //we are looking for t that achieves a good enough approximation of f = 0, 
+    //since then we reached the arcLength==s
+    let al = this.arcLength(t)
+    let f = al - s;
+    console.log(t);
+
+    if (Math.abs(f) < 0.1) {
+      console.log(i);
+        return t
+    }
+      
+
+    let derivative = this.tangentLength(t);
+    let candidateT = t - f / derivative;
+
+    if (f > 0)
+    {
+      upperBound = t;
+      if (candidateT <= 0)
+        t = (upperBound + lowerBound) / 2;
+      else
+        t = candidateT;
+    }
+    else
+    {
+      lowerBound = t;
+      if (candidateT >= 1)
+        t = (upperBound + lowerBound) / 2;
+      else
+        t = candidateT;
+    }
+  }
+
+  console.log('25');
+  return t;
+}
+
+    b_dev = derivative_con(this.b);
+    tangentLength = speed_con(this.b_dev);
+    arcLength = arcLength_con(this.tangentLength);
+    c = s => this.b(this.invert_arcl(s))
+
     
    
     drawSegment(ctx, n=200) {

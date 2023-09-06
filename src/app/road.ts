@@ -15,8 +15,8 @@ export class Road {
             start: [100,100],
             end:[400,200],
             type: 'straight',
-            beforeSegments: [],
-            afterSegments: [1]
+            before: [],
+            after: [1]
         }
         this.segments[0] = new StraightSegment(segment_config_1)
 
@@ -24,9 +24,9 @@ export class Road {
             start: [400,200],
             end:[800,800],
             type: 'bezier',
-            beforeSegments: [0],
-            afterSegments: [],
-            points:[[400,200],[30,400],[300,300],[800,800]]
+            before: [0],
+            after: [],
+            points:[[30,400],[300,300]]
         }
 
         this.segments[1] = new BezierSegment(segment_config_2)
