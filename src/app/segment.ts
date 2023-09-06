@@ -37,9 +37,9 @@ export class StraightSegment extends Segment {
 
 function segments(points,ctx) {
     ctx.beginPath();
+    ctx.moveTo(...points[0]);
     for (let point of points) {
-        ctx.moveTo(...this.start);
-        ctx.lineTo(...this.end);
+        ctx.lineTo(...point);
     }
     ctx.stroke();
  }
@@ -103,11 +103,11 @@ export class BezierSegment extends Segment {
     points;
     constructor(config) {
         super(config);
-        this.points
+        this.points = config.points;
         this.arclength = this.arcLength(1)
     }
 
-    b(t) {
+    b = (t) => {
         return [Math.pow((1-t),3)*this.start[0]+3*t*Math.pow((1-t),2)*this.points[0][0]+3*Math.pow(t,2)*(1-t)*this.points[1][0]+Math.pow(t,3)*this.end[0], 
         Math.pow((1-t),3)*this.start[1]+3*t*Math.pow((1-t),2)*this.points[0][1]+3*Math.pow(t,2)*(1-t)*this.points[1][1]+Math.pow(t,3)*this.end[1]]
     } 
@@ -125,10 +125,8 @@ export class BezierSegment extends Segment {
     //since then we reached the arcLength==s
     let al = this.arcLength(t)
     let f = al - s;
-    console.log(t);
 
     if (Math.abs(f) < 0.1) {
-      console.log(i);
         return t
     }
       

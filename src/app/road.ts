@@ -22,16 +22,16 @@ export class Road {
 
         const segment_config_2 = {
             start: [400,200],
-            end:[800,800],
+            end:[800,100],
             type: 'bezier',
             before: [0],
             after: [],
-            points:[[30,400],[300,300]]
+            points:[[300,100],[300,300]]
         }
 
         this.segments[1] = new BezierSegment(segment_config_2)
 
-        this.length = this.segments.reduce((acc, segment)=> acc + segment.arclength)
+        this.length = this.segments.reduce((acc, segment)=> acc + segment.arclength,0)
 
         for (let i=0; i<this.number_veh; i++) {
             let new_position = this.noCollisionPos(rand);
