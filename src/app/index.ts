@@ -86,8 +86,14 @@ function update(road) {
 
         veh.speed=Math.max(veh.speed+veh.acc*dt, 0);
 
-        if (veh.position > road.length) {
-            vehicles.shift()
+        if (veh.position > road.segments[veh.segment].arclength) {
+            if (road.segments[veh.segment].after.length > 0) {
+                veh.position = veh.position - road.segments[veh.segment].arclength;
+                veh.segment = road.segments[veh.segment].after[0];
+            } else {
+                vehicles.splice(i,1)
+            }
+            
         }
 
     })

@@ -21,9 +21,20 @@ export class StraightSegment extends Segment {
         super(config);
         this.arclength = this.arcLength(1)
     }
+    b(t) {
+        return [this.start[0]+t*(this.end[0]-this.start[0]),
+        this.start[1]+t*(this.end[1]-this.start[1])]
+    }
     arcLength(t) {
         return t*Math.sqrt(Math.pow(this.end[0]-this.start[0],2)+Math.pow(this.end[1]-this.start[1],2))
     }
+
+    inverse_al(s) {
+        return s / Math.sqrt(Math.pow(this.end[0]-this.start[0],2)+Math.pow(this.end[1]-this.start[1],2))
+    }
+
+    c = (s) => this.b(this.inverse_al(s));
+
     drawSegment(ctx) {
         ctx.beginPath();
         ctx.moveTo(...this.start);
@@ -31,7 +42,10 @@ export class StraightSegment extends Segment {
         ctx.stroke();
     }
     drawVehicle(vehicle,ctx) {
-        ctx.arc(...vehicle.position, 5, 0, 2*Math.PI)
+        let veh_point = this.c(vehicle.position);
+        ctx.beginPath();
+        ctx.arc(...veh_point, 5, 0, 2*Math.PI);
+        ctx.stroke();
     }
 }
 
@@ -167,6 +181,8 @@ export class BezierSegment extends Segment {
         segments([...Array(n+1).keys()].map(k => this.c((this.arclength) * k/n)),ctx)
     }
     drawVehicle(vehicle,ctx) {
-        ctx.arc(...vehicle.position, 5, 0, 2*Math.PI)
+        ctx.beginPath();
+        ctx.arc(...this.c(vehicle.position), 5, 0, 2*Math.PI);
+        ctx.stroke();
     }
 }
