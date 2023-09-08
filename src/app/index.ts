@@ -46,7 +46,8 @@ let a = 2;
 let b = 3;
 let bmax = 3;
 let fps = 30;
-let timewarp = 6;
+let timewarp = 20;
+let spawnProb = 0.01*timewarp;
 let dt = timewarp / fps;
 
 let road = new Road(rand, v0);
@@ -114,7 +115,7 @@ function update_psa(road) {
 
 function update_newVeh(road) {
     //spawn new vehicles
-    if (rand() > 0.98 && (road.segments[0].vehicles.length == 0 || road.segments[0].vehicles[road.segments[0].vehicles.length - 1].position > 60)) {
+    if (rand() < spawnProb && (road.segments[0].vehicles.length == 0 || road.segments[0].vehicles[0].position > 60)) {
         road.newVehicle(rand);
     }
 }
