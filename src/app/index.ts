@@ -74,18 +74,19 @@ function update_psa(road) {
     road.segments.forEach((segment) => segment.vehicles.forEach((veh, i, vehicles) => {
         let s, leadSpeed, leadAcc;
         console.log(segment.arclength);
-            if (veh.lead > -1) {
-                s = vehicles[veh.lead].position - vehicles[veh.lead].len - veh.position;
-                leadSpeed = vehicles[veh.lead].speed;
-                leadAcc = vehicles[veh.lead].acc ;
-            } else if (segment.after.length > 0) {
-                s = road.segments[segment.after].vehicles[0].position + segment.arclength - road.segments[segment.after].vehicles[0].len - veh.position;
-                leadSpeed = road.segments[segment.after].vehicles[0].speed;
-                leadAcc = road.segments[segment.after].vehicles[0].acc ;
-            } else {
+
+            if (veh.lead.veh > -1) {
+                s = vehicles[veh.lead.veh].position - vehicles[veh.lead.veh].len - veh.position;
+                leadSpeed = vehicles[veh.lead.veh].speed;
+                leadAcc = vehicles[veh.lead.veh].acc ;
+            } else if (veh.lead.seg == -1) {
                 s = 100000;
                 leadSpeed = 0;
                 leadAcc = 0;
+            } else {
+                s = veh.lead.relPos + road.segments[veh.lead.seg].vehicles[0].len - veh.position;
+                leadSpeed = road.segments[veh.lead.seg].vehicles[0].speed;
+                leadAcc = road.segments[veh.lead.seg].vehicles[0].acc ;
             } 
             
             veh.acc = calcAcc(s, veh.speed, leadSpeed, leadAcc)
@@ -98,8 +99,8 @@ function update_psa(road) {
                 //hier liegt der Wurm begraben, das habe ich noch gar nicht richtig auf die Segmentenaufteilung der Vehicles angepasst!!!
                 if (road.segments[veh.segment].after.length > 0) {
                     veh.position = veh.position - road.segments[veh.segment].arclength;
-                    veh.segment = segment.after;
-                    road.segments[segment.after].vehicles.unshift(veh);
+                    veh.segment = segment.after[0];
+                    road.segments[segment.after[0]].vehicles.unshift(veh);
                 } 
                 vehicles.splice(i, 1);
     

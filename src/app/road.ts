@@ -2,7 +2,7 @@ import { Vehicle } from './vehicle';
 import { StraightSegment, BezierSegment } from './segment';
 export class Road {
     length: number;
-    number_veh = 5;
+    number_veh = 15;
     max_speed;
     segments = [];
 
@@ -21,14 +21,25 @@ export class Road {
 
         const segment_config_2 = {
             start: [400, 200],
-            end: [800, 100],
+            end: [600, 100],
             type: 'bezier',
             before: [0],
-            after: [],
-            points: [[550, 250], [500, 300]]
+            after: [2],
+            points: [[550, 250], [425, 150]]
         }
 
         this.segments[1] = new BezierSegment(segment_config_2)
+
+        const segment_config_3 = {
+            start: [600, 100],
+            end: [800, 400],
+            type: 'bezier',
+            before: [1],
+            after: [],
+            points: [[950, 0], [500, 300]]
+        }
+
+        this.segments[2] = new BezierSegment(segment_config_3)
 
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 
@@ -64,11 +75,38 @@ export class Road {
         } else { return this.noCollisionPos(rand, segment) }
     }
     public update_leadVeh() {
-        this.segments.forEach((segment) => segment.vehicles.forEach((vehicle, index) => {
+        this.segments.forEach((segment,indexs,segments) => segment.vehicles.forEach((vehicle, indexv,vehicles) => {
             //mit nur einer Lane ist das natürlich trivial wenn das Array parallel auch sortiert wird, 
             //aber falls ich irgendwann mehrere Lanes will, dann braucht es das auch, daher implementiere ich das 
             //jetzt schon
-            vehicle.lead =  (index == segment.vehicles.length - 1) ? -1 : index + 1
+            if (indexv < segment.vehicles.length - 1){
+                vehicle.lead = {
+                    veh: indexv+1,
+                    relPos: 0,
+                    seg: -1
+                }
+            } else {
+                let accLength = 0;
+                let currentSegment = segment;
+                let leadSegment = -1;
+                let leaderFound = false;
+                while(currentSegment.after.length > 0 && !leaderFound) {
+                   
+                    if (segments[currentSegment.after[0]].vehicles.length > 0) {
+                        
+                        leadSegment=currentSegment.after[0];
+                        leaderFound = true
+                    }
+                    accLength+=currentSegment.arclength;
+                    currentSegment= segments[currentSegment.after[0]];
+                }
+                vehicle.lead = {
+                    veh: -1,
+                    relPos: accLength,
+                    seg: leadSegment
+                }
+
+            }
         }))
     }
 }
