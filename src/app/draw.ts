@@ -10,10 +10,11 @@ let drawRoad = function (road, ctx) {
 
 let drawVehicles = function (road, ctx) {
     ctx.fillStyle = "orange";
-    road.vehicles.forEach((vehicle) => {
-        road.segments[vehicle.segment].drawVehicle(vehicle, ctx)
+    road.segments.forEach((segment) => {
+        segment.vehicles.forEach((vehicle) => {
+            segment.drawVehicle(vehicle, ctx)
     })
-
+})
 }
 
 export function draw_init(road) {

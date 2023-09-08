@@ -4,13 +4,15 @@ class Segment {
     end: [number,number];
     before: [];
     after: [];
-    arclength: number
+    arclength: number;
+    vehicles =[];
     constructor(config) {
         this.type = config.type;
         this.start = config.start;
         this.end = config.end;
         this.before = config.before;
         this.after = config.after;
+
     }
     drawSegment(ctx) {};
     drawVehicle(vehicle,ctx) {};
