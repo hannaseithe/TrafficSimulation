@@ -52,13 +52,14 @@ let dt = timewarp / fps;
 
 let road = new Road(rand, v0);
 
-function calcAcc(s, v, vl, al) {
+function calcAcc(s, v, vl, al, slowed) {
 
     let accNoise = a * (rand() * 0.02 - 0.01);
 
     // actual acceleration model
+    let slower = slowed? 1.6:1;
 
-    var accFree = (v < v0) ? a * (1 - Math.pow(v / v0, 4))
+    var accFree = (v < v0) ? a * (1 - Math.pow(v*slower / v0, 4))
         : a * (1 - v / v0);
     var sstar = s0 + Math.max(0., v * T + 0.5 * v * (v - vl) / Math.sqrt(a * b));
     var accInt = -a * Math.pow(sstar / Math.max(s, s0), 2);
@@ -89,7 +90,7 @@ function update_psa(road) {
                 leadAcc = road.segments[veh.lead.seg].vehicles[0].acc ;
             } 
             
-            veh.acc = calcAcc(s, veh.speed, leadSpeed, leadAcc)
+            veh.acc = calcAcc(s, veh.speed, leadSpeed, leadAcc, veh.slowed)
             veh.position += Math.max(0, veh.speed * dt + 0.5 * veh.acc * dt * dt);
     
             veh.speed = Math.max(veh.speed + veh.acc * dt, 0);
@@ -104,6 +105,13 @@ function update_psa(road) {
                 } 
                 vehicles.splice(i, 1);
     
+            }
+            if (veh.slowed) {
+               veh.slowedCounter--;
+               if (veh.slowedCounter<1) {
+                veh.color="gold";
+                veh.slowed=false;
+               }
             }
 
         
@@ -154,7 +162,8 @@ road.drawnVehicles.forEach(function(vehicle) {
         && x > vehicle.x - vehicle.len*3 && x < vehicle.x + vehicle.len*3) {
             let clickedVehicle = road.segments[vehicle.segment].vehicles[vehicle.index]
         clickedVehicle.color = "red";
-        clickedVehicle.acc=-1;
+        clickedVehicle.slowed=true;
+        clickedVehicle.slowedCounter=60;
     }
 });
 }

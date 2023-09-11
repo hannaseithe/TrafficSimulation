@@ -6,6 +6,7 @@ export class Vehicle {
     len = 4;
     width = 3;
     color = "gold";
+    slowed = false;
     constructor (speed,position,segment){
         this.speed = speed;
         this.position = position;
