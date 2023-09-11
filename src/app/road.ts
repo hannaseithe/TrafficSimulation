@@ -2,9 +2,10 @@ import { Vehicle } from './vehicle';
 import { StraightSegment, BezierSegment } from './segment';
 export class Road {
     length: number;
-    number_veh = 15;
+    number_veh = 1;
     max_speed;
     segments = [];
+    drawnVehicles = [];
 
 
     constructor(rand, v0) {

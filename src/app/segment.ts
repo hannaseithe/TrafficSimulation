@@ -23,18 +23,14 @@ class Segment {
     return (degree)
   }
   drawSegment(ctx) { };
-  drawVehicle(vehicle, ctx) {
+  drawVehicle(vehicle, ctx,seg_index,veh_index) {
     let veh_point = this.c(vehicle.position);
-    /*ctx.beginPath();
-    
-    ctx.arc(...veh_point, 5, 0, 2*Math.PI);
-    ctx.stroke();*/
 
     ctx.save();
 
     ctx.beginPath();
     // move the rotation point to the center of the rect
-    ctx.translate(veh_point[0] + vehicle.len / 2, veh_point[1] + vehicle.width / 2);
+    ctx.translate(veh_point[0], veh_point[1]);
     //calculate the rotation degree
 
     // rotate the rect
@@ -46,11 +42,20 @@ class Segment {
 
     ctx.rect(-vehicle.len*2, -vehicle.width*2, vehicle.len*4, vehicle.width*4);
 
-    ctx.fillStyle = "gold";
+    ctx.fillStyle = vehicle.color;
     ctx.fill();
 
     // restore the context to its untranslated/unrotated state
     ctx.restore();
+    return {
+      x: veh_point[0],
+      y: veh_point[1],
+      len: vehicle.len,
+      width: vehicle.width,
+      degree: degree,
+      segment: seg_index,
+      index: veh_index
+    }
   }
 }
 

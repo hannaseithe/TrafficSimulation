@@ -74,7 +74,6 @@ function calcAcc(s, v, vl, al) {
 function update_psa(road) {
     road.segments.forEach((segment) => segment.vehicles.forEach((veh, i, vehicles) => {
         let s, leadSpeed, leadAcc;
-        console.log(segment.arclength);
 
             if (veh.lead.veh > -1) {
                 s = vehicles[veh.lead.veh].position - vehicles[veh.lead.veh].len - veh.position;
@@ -141,36 +140,33 @@ function main_loop() {
     update(road);
 }
 
-/*function onclick(event) {
+function onclick(event) {
     var x = event.pageX - canvasLeft,
     y = event.pageY - canvasTop;
 
 // Collision detection between clicked offset and element.
-canvasVehicles.forEach(function(vehicle) {
-    if (y > vehicle.top && y < vehicle.top + vehicle.len
-        && x > vehicle.left && x < vehicle.left + vehicle.width) {
-        alert('clicked an element');
+
+
+
+
+road.drawnVehicles.forEach(function(vehicle) {
+    if (y > vehicle.y - vehicle.width*3 && y < vehicle.y + vehicle.width*3
+        && x > vehicle.x - vehicle.len*3 && x < vehicle.x + vehicle.len*3) {
+            let clickedVehicle = road.segments[vehicle.segment].vehicles[vehicle.index]
+        clickedVehicle.color = "red";
+        clickedVehicle.acc=-1;
     }
 });
 }
 
 let     canvasLeft = canvas.offsetLeft + canvas.clientLeft,
-    canvasTop = canvas.offsetTop + canvas.clientTop,
-    canvasVehicles = [];
-
-// Add event listener for `click` events.
-
-
-// Add element.
-vehicles.push({
-    colour: '#05EFFF',
-    width: 150,
-    height: 100,
-    top: 20,
-    left: 15
-});
+    canvasTop = canvas.offsetTop + canvas.clientTop;
 
 
 
-canvas.addEventListener('click', onclick, false);*/
+
+
+
+
+canvas.addEventListener('click', onclick, false);
 var myRun = setInterval(main_loop, 1000 / fps); 
