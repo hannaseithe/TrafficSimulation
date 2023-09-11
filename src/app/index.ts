@@ -46,7 +46,7 @@ let a = 2;
 let b = 3;
 let bmax = 3;
 let fps = 30;
-let timewarp = 20;
+let timewarp = 5;
 let spawnProb = 0.01*timewarp;
 let dt = timewarp / fps;
 
@@ -141,5 +141,36 @@ function main_loop() {
     update(road);
 }
 
+/*function onclick(event) {
+    var x = event.pageX - canvasLeft,
+    y = event.pageY - canvasTop;
 
+// Collision detection between clicked offset and element.
+canvasVehicles.forEach(function(vehicle) {
+    if (y > vehicle.top && y < vehicle.top + vehicle.len
+        && x > vehicle.left && x < vehicle.left + vehicle.width) {
+        alert('clicked an element');
+    }
+});
+}
+
+let     canvasLeft = canvas.offsetLeft + canvas.clientLeft,
+    canvasTop = canvas.offsetTop + canvas.clientTop,
+    canvasVehicles = [];
+
+// Add event listener for `click` events.
+
+
+// Add element.
+vehicles.push({
+    colour: '#05EFFF',
+    width: 150,
+    height: 100,
+    top: 20,
+    left: 15
+});
+
+
+
+canvas.addEventListener('click', onclick, false);*/
 var myRun = setInterval(main_loop, 1000 / fps); 
