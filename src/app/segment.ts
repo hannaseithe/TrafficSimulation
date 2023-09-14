@@ -40,7 +40,7 @@ class Segment {
 
     // draw the rect on the transformed context
 
-    ctx.rect(-vehicle.len*2, -vehicle.width*2, vehicle.len*4, vehicle.width*4);
+    ctx.rect(-vehicle.len/2, -vehicle.width/2, vehicle.len, vehicle.width);
 
     ctx.fillStyle = vehicle.color;
     ctx.fill();

@@ -2,7 +2,7 @@ import { Vehicle } from './vehicle';
 import { StraightSegment, BezierSegment } from './segment';
 export class Road {
     length: number;
-    number_veh = 1;
+    number_veh = 20;
     max_speed;
     segments = [];
     drawnVehicles = [];
@@ -49,7 +49,7 @@ export class Road {
             let new_position = this.noCollisionPos(rand, new_segment);
 
 
-            this.segments[new_segment].vehicles.push(new Vehicle(this.max_speed * rand(), new_position, new_segment));
+            this.segments[new_segment].vehicles.push(new Vehicle(this.max_speed *  (0.5+rand()/2), new_position, new_segment));
         }
         this.sortVehicles()
         this.update_leadVeh()
@@ -61,7 +61,7 @@ export class Road {
 
     public newVehicle(rand) {
         let new_position = 0;
-        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * rand(), new_position, 0))
+        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (0.5+rand()/2), new_position, 0))
     }
 
     private noCollisionPos(rand, segment) {

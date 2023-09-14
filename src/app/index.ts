@@ -4,22 +4,6 @@ import { draw } from './draw';
 
 
 /*
-- get Canvas etc.
-- seed Random
-- create Road with random initial Cars (or should I let them randomly arrive after start?)
-- drawRoad
-    - drawBackground
-    - drawCars
-- LOOP:
-    -Timestep
-    - For each Car REACT
-    - if distance_allows randomly get new Car start 
-    - Calculate new Position for Each car
-        - if car over finish delete
-    - drawRoad
-*/
-
-/*
 get Canvas
 */
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -39,15 +23,15 @@ create Road
 
 
 
-let v0 = 10;
-let s0 = 3;
-let T = 1.4;
-let a = 2;
-let b = 3;
-let bmax = 3;
-let fps = 30;
-let timewarp = 5;
-let spawnProb = 0.01*timewarp;
+let v0 = 30;    //Wunschgeschwindigkeit
+let s0 = 3;     //Mindestabstand
+let T = 1;    //Folgezeit
+let a = 1.5;      //Beschleunigung
+let b = 2;      //komfortable Bremsverzögerung
+let bmax = 3;   //max. Bremsverzögerung
+let fps = 30;   //Frames per Seconds
+let timewarp = 4;
+let spawnProb = 0.02*timewarp;
 let dt = timewarp / fps;
 
 let road = new Road(rand, v0);
@@ -56,15 +40,15 @@ function calcAcc(s, v, vl, al, slowed) {
 
     let accNoise = a * (rand() * 0.02 - 0.01);
 
-    // actual acceleration model
-    let slower = slowed? 1.6:1;
-
-    var accFree = (v < v0) ? a * (1 - Math.pow(v*slower / v0, 4))
+    // actual IDM model
+    let slower = slowed? 0.2:1;
+    //Beschleinigung auf freier Strecke
+    var accFree = (v < v0) ? a * (1 - Math.pow(v / (v0*slower), 4))
         : a * (1 - v / v0);
+    //s* ist Wunschabstand
     var sstar = s0 + Math.max(0., v * T + 0.5 * v * (v - vl) / Math.sqrt(a * b));
+    //Anteil an Beschleunigung der durch den Wunschabstand (<GEschwindigkeitsdifferenz) und dem realen Abstand bestimmt wird
     var accInt = -a * Math.pow(sstar / Math.max(s, s0), 2);
-
-    // return original IDM
 
     return (v0 < 0.00001) ? 0
         : Math.max(-bmax, accFree + accInt + accNoise);
@@ -122,7 +106,7 @@ function update_psa(road) {
 
 function update_newVeh(road) {
     //spawn new vehicles
-    if (rand() < spawnProb && (road.segments[0].vehicles.length == 0 || road.segments[0].vehicles[0].position > 60)) {
+    if (rand() < spawnProb && (road.segments[0].vehicles.length == 0 || road.segments[0].vehicles[0].position > 30)) {
         road.newVehicle(rand);
     }
 }
@@ -163,7 +147,7 @@ road.drawnVehicles.forEach(function(vehicle) {
             let clickedVehicle = road.segments[vehicle.segment].vehicles[vehicle.index]
         clickedVehicle.color = "red";
         clickedVehicle.slowed=true;
-        clickedVehicle.slowedCounter=60;
+        clickedVehicle.slowedCounter=300/timewarp;
     }
 });
 }
