@@ -58,7 +58,7 @@ function calcAcc(s, v, vl, al, slowed) {
 //update each vehicle with new position/speed/acceleration (PSA) based on IDM
 function update_psa(road) {
     road.segments.forEach((segment) => segment.vehicles.forEach((veh, i, vehicles) => {
-        if (!veh.collided) {
+        if (!veh.collided && veh.type == "car") {
             let s, leadSpeed, leadAcc;
             let leadVeh;
 
@@ -114,7 +114,9 @@ function update_psa(road) {
     )
     road.segments.forEach((segment) => segment.vehicles.forEach((veh,i,vehicles) => {
         //testing for collision
-        if (veh.lead && veh.lead.veh.segment == veh.segment && veh.position > veh.lead.veh.position - veh.lead.veh.len) {
+        if (veh.type == "car" && veh.lead && veh.lead.veh.type == "car" 
+        && veh.lead.veh.segment == veh.segment 
+        && veh.position > veh.lead.veh.position - veh.lead.veh.len) {
             veh.speed = 0;
             veh.lead.speed = 0;
             veh.collided = veh.lead.veh.collided = true
@@ -155,18 +157,22 @@ function onclick(event) {
     var x = event.pageX - canvasLeft,
     y = event.pageY - canvasTop;
 
-// Collision detection between clicked offset and element.
 
 
 
 
 road.drawnVehicles.forEach(function(vehicle) {
-    if (y > vehicle.y - vehicle.width*3 && y < vehicle.y + vehicle.width*3
-        && x > vehicle.x - vehicle.len*3 && x < vehicle.x + vehicle.len*3) {
-            let clickedVehicle = road.segments[vehicle.segment].vehicles[vehicle.index]
-        clickedVehicle.color = "red";
-        clickedVehicle.slowed=true;
-        clickedVehicle.slowedCounter=300/timewarp;
+    if (y > vehicle.y - vehicle.veh.width*3 && y < vehicle.y + vehicle.veh.width*3
+        && x > vehicle.x - vehicle.veh.len*3 && x < vehicle.x + vehicle.veh.len*3) {
+            let clickedVehicle = vehicle.veh;
+            if (clickedVehicle.type == "car") {
+                clickedVehicle.color = "red";
+                clickedVehicle.slowed=true;
+                clickedVehicle.slowedCounter=300/timewarp;
+            } else if (clickedVehicle.type=="traffic-light") {
+                clickedVehicle.tf.state = clickedVehicle.tf.state == "red"? "green" : "red"
+            }
+
     }
 });
 }

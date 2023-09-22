@@ -44,12 +44,15 @@ export class Road {
 
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 
+        this.segments[1].vehicles.push(new Vehicle(0, 100, 1, "traffic-light"))
+
         for (let i = 0; i < this.number_veh; i++) {
             let new_segment = Math.floor(this.segments.length * rand());
             let new_position = this.noCollisionPos(rand, new_segment);
 
 
-            this.segments[new_segment].vehicles.push(new Vehicle(this.max_speed *  (0.5+rand()/2), new_position, new_segment));
+
+            this.segments[new_segment].vehicles.push(new Vehicle(this.max_speed * (0.5 + rand() / 2), new_position, new_segment, "car"));
         }
         this.sortVehicles()
         this.update_leadVeh()
@@ -61,13 +64,13 @@ export class Road {
 
     public newVehicle(rand) {
         let new_position = 0;
-        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (rand()/2), new_position, 0))
+        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (rand() / 2), new_position, 0, "car"))
     }
 
     public getVehicleNumber() {
         return this.segments
-        .map((segment) => segment.vehicles.length)
-        .reduce((acc,cur)=> acc+cur,0)
+            .map((segment) => segment.vehicles.length)
+            .reduce((acc, cur) => acc + cur, 0)
     }
 
     private noCollisionPos(rand, segment) {
@@ -82,13 +85,14 @@ export class Road {
         } else { return this.noCollisionPos(rand, segment) }
     }
     public update_leadVeh() {
-        this.segments.forEach((segment,indexs,segments) => segment.vehicles.forEach((vehicle, indexv,vehicles) => {
+        this.segments.forEach((segment, indexs, segments) => segment.vehicles.forEach((vehicle, indexv, vehicles) => {
             //mit nur einer Lane ist das natürlich trivial wenn das Array parallel auch sortiert wird, 
             //aber falls ich irgendwann mehrere Lanes will, dann braucht es das auch, daher implementiere ich das 
             //jetzt schon
-            if (indexv < segment.vehicles.length - 1){
+            if (indexv < segment.vehicles.length - 1) {
+
                 vehicle.lead = {
-                    veh: segment.vehicles[indexv+1],
+                    veh: segment.vehicles[indexv + 1],
                     relPos: 0
                 }
             } else {
@@ -96,25 +100,42 @@ export class Road {
                 let currentSegment = segment;
                 let leadSegment = -1;
                 let leaderFound = false;
-                while(currentSegment.after.length > 0 && !leaderFound) {
-                   
+                while (currentSegment.after.length > 0 && !leaderFound) {
+
                     if (segments[currentSegment.after[0]].vehicles.length > 0) {
-                        
-                        leadSegment=currentSegment.after[0];
+
+                        leadSegment = currentSegment.after[0];
                         leaderFound = true
                     }
-                    accLength+=currentSegment.arclength;
-                    currentSegment= segments[currentSegment.after[0]];
+                    accLength += currentSegment.arclength;
+                    currentSegment = segments[currentSegment.after[0]];
                 }
                 if (leaderFound) {
                     vehicle.lead = {
                         veh: segments[leadSegment].vehicles[0],
                         relPos: accLength
                     }
-                } else vehicle.lead = undefined
-                
+                } else { vehicle.lead = undefined }
+            }
+
+            if (vehicle.type == "traffic-light"
+                && vehicle.tf.state == "green"
+                && vehicle.follower) {
+                if (vehicle.lead) {
+                    vehicle.follower.lead.veh = vehicle.lead.veh;
+                    vehicle.follower.lead.relPos += vehicle.lead.relPos;
+                } else {
+                    vehicle.follower.lead = undefined;
+                }
 
             }
+
+            if (vehicle.lead && vehicle.lead.veh.type == "traffic-light") {
+                vehicle.lead.veh.follower = vehicle
+            }
+
+
+
         }))
     }
 }

@@ -25,18 +25,24 @@ class Segment {
   drawSegment(ctx) { };
   drawVehicle(vehicle, ctx,seg_index,veh_index) {
     let veh_point = this.c(vehicle.position);
+    let shift = [0,0];
 
     ctx.save();
 
     ctx.beginPath();
     // move the rotation point to the center of the rect
     ctx.translate(veh_point[0], veh_point[1]);
-    //calculate the rotation degree
 
+     //calculate the rotation degree
     // rotate the rect
     let tangent = this.tangent(this.invert_arcl(vehicle.position));
     let degree = this.degree(tangent);
     ctx.rotate(degree);
+    
+    
+    if (vehicle.type == "car") {
+   
+   
 
     // draw the rect on the transformed context
 
@@ -45,16 +51,22 @@ class Segment {
     ctx.fillStyle = vehicle.collided ? "black" : vehicle.color;
     ctx.fill();
 
+    } else if(vehicle.type== "traffic-light") {
+      ctx.translate(0,10);
+      ctx.arc(0,0, 2, 0, 2 * Math.PI);
+      ctx.fillStyle = vehicle.tf.state;
+      ctx.fill();
+      shift = [-10*Math.sin(degree),
+      10*Math.cos(degree)]
+    } 
+    
     // restore the context to its untranslated/unrotated state
     ctx.restore();
     return {
-      x: veh_point[0],
-      y: veh_point[1],
-      len: vehicle.len,
-      width: vehicle.width,
-      degree: degree,
-      segment: seg_index,
-      index: veh_index
+      x: veh_point[0]+shift[0],
+      y: veh_point[1]+shift[1],
+      veh: vehicle,
+      degree: degree
     }
   }
 }
