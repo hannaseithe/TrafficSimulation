@@ -2,7 +2,7 @@ import { Vehicle } from './vehicle';
 import { StraightSegment, BezierSegment } from './segment';
 export class Road {
     length: number;
-    number_veh = 20;
+    number_veh = 10;
     max_speed;
     segments = [];
     drawnVehicles = [];
@@ -64,6 +64,12 @@ export class Road {
         this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (0.5+rand()/2), new_position, 0))
     }
 
+    public getVehicleNumber() {
+        return this.segments
+        .map((segment) => segment.vehicles.length)
+        .reduce((acc,cur)=> acc+cur,0)
+    }
+
     private noCollisionPos(rand, segment) {
         let testPos = this.segments[segment].arclength * rand();
         if (this.segments[segment].vehicles.every((veh) => {
@@ -82,9 +88,8 @@ export class Road {
             //jetzt schon
             if (indexv < segment.vehicles.length - 1){
                 vehicle.lead = {
-                    veh: indexv+1,
-                    relPos: 0,
-                    seg: -1
+                    veh: segment.vehicles[indexv+1],
+                    relPos: 0
                 }
             } else {
                 let accLength = 0;
@@ -101,11 +106,13 @@ export class Road {
                     accLength+=currentSegment.arclength;
                     currentSegment= segments[currentSegment.after[0]];
                 }
-                vehicle.lead = {
-                    veh: -1,
-                    relPos: accLength,
-                    seg: leadSegment
-                }
+                if (leaderFound) {
+                    vehicle.lead = {
+                        veh: segments[leadSegment].vehicles[0],
+                        relPos: accLength
+                    }
+                } else vehicle.lead = undefined
+                
 
             }
         }))

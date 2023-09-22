@@ -42,7 +42,7 @@ class Segment {
 
     ctx.rect(-vehicle.len/2, -vehicle.width/2, vehicle.len, vehicle.width);
 
-    ctx.fillStyle = vehicle.color;
+    ctx.fillStyle = vehicle.collided ? "black" : vehicle.color;
     ctx.fill();
 
     // restore the context to its untranslated/unrotated state
