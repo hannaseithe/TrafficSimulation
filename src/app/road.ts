@@ -61,7 +61,7 @@ export class Road {
 
     public newVehicle(rand) {
         let new_position = 0;
-        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (0.5+rand()/2), new_position, 0))
+        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (rand()/2), new_position, 0))
     }
 
     public getVehicleNumber() {

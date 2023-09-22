@@ -25,9 +25,9 @@ create Road
 
 let v0 = 35;    //Wunschgeschwindigkeit
 let s0 = 2;     //Mindestabstand
-let T = 2.8;    //Folgezeit
+let T = 1.8;    //Folgezeit
 let a = 2;      //Beschleunigung
-let b = 5;      //komfortable Bremsverzögerung
+let b = 3;      //komfortable Bremsverzögerung
 let bmax = 6;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
 let timewarp = 4;
@@ -46,7 +46,7 @@ function calcAcc(s, v, vl, al, slowed) {
     var accFree = (v < v0) ? a * (1 - Math.pow(v / (v0*slower), 4))
         : a * (1 - v / v0);
     //s* ist Wunschabstand
-    var sstar = s0 + Math.max(0., v * T + 0.5 * v * (v - vl) / Math.sqrt(a * b));
+    var sstar = s0 + Math.max(0, v * T + 0.5 * v * (v - vl) / Math.sqrt(a * b));
     //Anteil an Beschleunigung der durch den Wunschabstand (<Geschwindigkeitsdifferenz) und dem realen Abstand bestimmt wird
     var accInt = -a * Math.pow(sstar / Math.max(s, s0), 2);
 
@@ -65,7 +65,7 @@ function update_psa(road) {
             if (veh.lead) {
               
                     leadVeh = veh.lead.veh;
-                    s = veh.lead.relPos + leadVeh.position + leadVeh.len - veh.position;
+                    s = veh.lead.relPos + leadVeh.position - leadVeh.len - veh.position;
                     leadSpeed = leadVeh.speed;
                     leadAcc = leadVeh.acc ;
 
@@ -106,15 +106,14 @@ function update_psa(road) {
        
     })
     )
-    /*road.segments.forEach((segment) => segment.vehicles.forEach((veh,i,vehicles) => {
+    road.segments.forEach((segment) => segment.vehicles.forEach((veh,i,vehicles) => {
         //testing for collision
-        if (leadVeh && veh.position > leadVeh.position + veh.lead.relPos - leadVeh.len) {
-            veh.position = leadVeh.position;
+        if (veh.lead && veh.lead.veh.segment == veh.segment && veh.position > veh.lead.veh.position - veh.lead.veh.len) {
             veh.speed = 0;
-            leadVeh.speed = 0;
-            veh.collided, leadVeh.collided = true
+            veh.lead.speed = 0;
+            veh.collided = veh.lead.veh.collided = true
         } 
-    }))*/
+    }))
 }
 
 function update_newVeh(road) {
