@@ -84,6 +84,12 @@ function update_psa(road) {
     
             if (veh.position > road.segments[veh.segment].arclength) {
 
+                //das muss umgestaltet werden wenn mehr als ein Segment hier zusammen laufen
+                // dann muss man die neuen Autos in der Reihenfolge in der sie im neuen Segment treffen
+                //in einem Zwischenschritt einordnen (sprich gesucht ist Zeitspanne des Wegstücks bis Ende altes
+                //Segment). Und dann davon ausgehend eventuelle Kollisionen überprüfen
+                
+
                 if (road.segments[veh.segment].after.length > 0) {
                     veh.position = veh.position - road.segments[veh.segment].arclength;
                     veh.segment = segment.after[0];
