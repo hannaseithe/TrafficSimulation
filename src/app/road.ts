@@ -1,18 +1,18 @@
-import { TrafficLight, Vehicle } from './vehicle';
+import { TrafficLight, Car } from './vehicle';
 import { StraightSegment, BezierSegment } from './segment';
-import { TL_STATES, VEH_TYPES } from './types';
+import { DRIV_TYPES, TL_STATES, VEH_TYPES } from './types';
 export class Road {
     length: number;
-    number_veh = 40;
+    number_veh = 20;
     max_speed;
-    bmax;
+    b;
     segments = [];
     drawnVehicles = [];
 
 
-    constructor(rand, v0, bmax) {
-        this.max_speed = v0;
-        this.bmax = bmax;
+    constructor(rand, config) {
+        this.max_speed = config.maxSpeed;
+        this.b = config.b;
 
         const segment_config_1 = {
             start: [100, 100],
@@ -47,16 +47,18 @@ export class Road {
 
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 
-        this.segments[1].vehicles.push(new TrafficLight(0, 100, 1, "traffic-light",10))
-        this.segments[2].vehicles.push(new TrafficLight(0, 100, 1, "traffic-light",150))
+        this.segments[1].vehicles.push(new TrafficLight(0, 100, 1,10))
+        this.segments[2].vehicles.push(new TrafficLight(0, 100, 1, 400))
 
         for (let i = 0; i < Math.min(10,this.number_veh); i++) {
             let new_segment = Math.floor(this.segments.length * rand());
             let new_position = this.noCollisionPos(rand, new_segment);
 
+            let r = rand();
 
+            let driver = (r > 0.75) ? DRIV_TYPES.AGG: (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF; 
 
-            this.segments[new_segment].vehicles.push(new Vehicle(this.max_speed * (0.5 + rand() / 2), new_position, new_segment, VEH_TYPES.CAR));
+            this.segments[new_segment].vehicles.push(new Car(this.max_speed * (0.5 + rand() / 2), new_position, new_segment, driver));
         }
         this.sortVehicles()
         this.update_leadVeh()
@@ -68,7 +70,9 @@ export class Road {
 
     public newVehicle(rand) {
         let new_position = 0;
-        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (rand() / 2), new_position, 0, VEH_TYPES.CAR))
+        let r = rand();
+        let driver = (r > 0.75) ? DRIV_TYPES.AGG: (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF; 
+        this.segments[0].vehicles.unshift(new Car(this.max_speed * (rand() / 2), new_position, 0, driver ))
     }
 
     public getVehicleNumber() {
@@ -89,7 +93,7 @@ export class Road {
         } else { return this.noCollisionPos(rand, segment) }
     }
     public canStop(vehicle,distance) {
-        let result = ((vehicle.speed ** 2)/(2*this.bmax) ) < distance
+        let result = ((vehicle.speed ** 2)/(2*this.b * vehicle.bF) ) < distance
         return result;
     }
     public update_leadVeh() {

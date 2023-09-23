@@ -24,7 +24,7 @@ create Road
 
 
 
-let v0 = 15;    //Wunschgeschwindigkeit
+let v0 = 30;    //Wunschgeschwindigkeit
 let s0 = 2;     //Mindestabstand
 let T = 1.8;    //Folgezeit
 let a = 2;      //Beschleunigung
@@ -34,29 +34,35 @@ let fps = 30;   //Frames per Seconds
 let timewarp = 4;
 let spawnProb = 0.02 * timewarp;
 let dt = timewarp / fps;
-let phaseLength = 10;
+let phaseLength = 11;
 
-let road = new Road(rand, v0, bmax);
+let roadConfig = {
+    maxSpeed: v0,
+    b: b
+}
 
-function calcAcc(s, v, vl, al, slowed) {
+let road = new Road(rand, roadConfig);
 
-    let accNoise = a * (rand() * 0.02 - 0.01);
+//this is where the Intelligent Driver Model(IDM) is implemented
+function calcAcc(veh, s, v, vl, al) {
+
+    let accNoise = (a*veh.aF) * (rand() * 0.02 - 0.01);
 
     // actual IDM model
-    let slower = slowed ? 0.01 : 1;
+    let slower = veh.slowed ? 0.01 : 1;
     //Beschleinigung auf freier Strecke
-    var accFree = (v < v0) ? a * (1 - Math.pow(v / (v0 * slower), 4))
-        : a * (1 - v / v0);
+    var accFree = (v < (v0*veh.v0F)) ? (a*veh.aF) * (1 - Math.pow(v / ((v0*veh.v0F) * slower), 4))
+        : (a*veh.aF) * (1 - v / (v0*veh.v0F));
     //s* ist Wunschabstand
-    var sstar = s0 + Math.max(0, v * T + 0.5 * v * (v - vl) / Math.sqrt(a * b));
+    var sstar = (s0*veh.s0F) + Math.max(0, v * (T*veh.TF) + 0.5 * v * (v - vl) / Math.sqrt((a*veh.aF) * (b*veh.bF)));
     //Anteil an Beschleunigung der durch den Wunschabstand (<Geschwindigkeitsdifferenz) und dem realen Abstand bestimmt wird
-    var accInt = -a * Math.pow(sstar / Math.max(s, s0), 2);
+    var accInt = -(a*veh.aF) * Math.pow(sstar / Math.max(s, (s0*veh.s0F)), 2);
 
-    return (v0 < 0.00001) ? 0
+    return ((v0*veh.v0F) < 0.00001) ? 0
         : Math.max(-bmax, accFree + accInt + accNoise);
 }
 
-//this is where the Intelligent Driver Model(IDM) is implemented
+
 //update each vehicle with new position/speed/acceleration (PSA) based on IDM
 function update_psa(road) {
     road.segments.forEach((segment) => segment.vehicles.forEach((veh, i, vehicles) => {
@@ -77,7 +83,7 @@ function update_psa(road) {
                 leadAcc = 0;
             }
 
-            veh.acc = calcAcc(s, veh.speed, leadSpeed, leadAcc, veh.slowed)
+            veh.acc = calcAcc(veh, s, veh.speed, leadSpeed, leadAcc)
             veh.position += Math.max(0, veh.speed * dt + 0.5 * veh.acc * dt * dt);
 
             veh.speed = Math.max(veh.speed + veh.acc * dt, 0);

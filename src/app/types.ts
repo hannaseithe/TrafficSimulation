@@ -7,3 +7,9 @@ export const TL_STATES = {
     YELLOW: "yellow",
     RED: "red"
 }
+export const DRIV_TYPES = {
+    AGG: "aggressive",
+    RES: "responsive",
+    REL: "relaxed",
+    DEF: "defensive"
+}
