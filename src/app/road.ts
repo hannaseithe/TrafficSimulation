@@ -1,15 +1,18 @@
 import { TrafficLight, Vehicle } from './vehicle';
 import { StraightSegment, BezierSegment } from './segment';
+import { TL_STATES, VEH_TYPES } from './types';
 export class Road {
     length: number;
     number_veh = 40;
     max_speed;
+    bmax;
     segments = [];
     drawnVehicles = [];
 
 
-    constructor(rand, v0) {
+    constructor(rand, v0, bmax) {
         this.max_speed = v0;
+        this.bmax = bmax;
 
         const segment_config_1 = {
             start: [100, 100],
@@ -53,7 +56,7 @@ export class Road {
 
 
 
-            this.segments[new_segment].vehicles.push(new Vehicle(this.max_speed * (0.5 + rand() / 2), new_position, new_segment, "car"));
+            this.segments[new_segment].vehicles.push(new Vehicle(this.max_speed * (0.5 + rand() / 2), new_position, new_segment, VEH_TYPES.CAR));
         }
         this.sortVehicles()
         this.update_leadVeh()
@@ -65,7 +68,7 @@ export class Road {
 
     public newVehicle(rand) {
         let new_position = 0;
-        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (rand() / 2), new_position, 0, "car"))
+        this.segments[0].vehicles.unshift(new Vehicle(this.max_speed * (rand() / 2), new_position, 0, VEH_TYPES.CAR))
     }
 
     public getVehicleNumber() {
@@ -84,6 +87,10 @@ export class Road {
         })) {
             return testPos
         } else { return this.noCollisionPos(rand, segment) }
+    }
+    public canStop(vehicle,distance) {
+        let result = ((vehicle.speed ** 2)/(2*this.bmax) ) < distance
+        return result;
     }
     public update_leadVeh() {
         this.segments.forEach((segment, indexs, segments) => segment.vehicles.forEach((vehicle, indexv, vehicles) => {
@@ -119,19 +126,22 @@ export class Road {
                 } else { vehicle.lead = undefined }
             }
 
-            if (vehicle.type == "traffic-light"
-                && vehicle.tf.state == "green"
+            if (vehicle.type == VEH_TYPES.TRAFFIC_LIGHT
+                && (vehicle.tf.state == TL_STATES.GREEN || (vehicle.tf.state == TL_STATES.YELLOW && !this.canStop(vehicle.follower,vehicle.follower.lead.relPos + vehicle.position - vehicle.follower.position - vehicle.follower.len))) 
                 && vehicle.follower) {
                 if (vehicle.lead) {
                     vehicle.follower.lead.veh = vehicle.lead.veh;
                     vehicle.follower.lead.relPos += vehicle.lead.relPos;
                 } else {
+                    if ( vehicle.tf.state == TL_STATES.YELLOW) {
+
+                    }
                     vehicle.follower.lead = undefined;
                 }
 
             }
 
-            if (vehicle.lead && vehicle.lead.veh.type == "traffic-light") {
+            if (vehicle.lead && vehicle.lead.veh.type == VEH_TYPES.TRAFFIC_LIGHT) {
                 vehicle.lead.veh.follower = vehicle
             }
 

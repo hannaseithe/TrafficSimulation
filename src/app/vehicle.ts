@@ -1,3 +1,4 @@
+import { TL_STATES } from "./types";
 export class Vehicle {
     speed;
     position;
@@ -27,7 +28,7 @@ export class TrafficLight extends Vehicle {
 
         this.len = 3;
         this.tf = {
-            state: "red",
+            state: TL_STATES.RED,
             counter: phase
         }
 

@@ -1,3 +1,5 @@
+import { VEH_TYPES } from "./types";
+
 class Segment {
   type: string;
   start: [number, number];
@@ -40,7 +42,7 @@ class Segment {
     ctx.rotate(degree);
     
     
-    if (vehicle.type == "car") {
+    if (vehicle.type == VEH_TYPES.CAR) {
    
    
 
@@ -51,7 +53,7 @@ class Segment {
     ctx.fillStyle = vehicle.collided ? "black" : vehicle.color;
     ctx.fill();
 
-    } else if(vehicle.type== "traffic-light") {
+    } else if(vehicle.type== VEH_TYPES.TRAFFIC_LIGHT) {
       ctx.translate(0,10);
       ctx.arc(0,0, 2, 0, 2 * Math.PI);
       ctx.fillStyle = vehicle.tf.state;

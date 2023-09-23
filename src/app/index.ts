@@ -1,7 +1,7 @@
 import { prng } from './prng';
 import { Road } from './road';
 import { draw } from './draw';
-import { VEH_TYPES } from './types';
+import { VEH_TYPES, TL_STATES } from './types';
 
 
 /*
@@ -24,28 +24,28 @@ create Road
 
 
 
-let v0 = 35;    //Wunschgeschwindigkeit
+let v0 = 15;    //Wunschgeschwindigkeit
 let s0 = 2;     //Mindestabstand
 let T = 1.8;    //Folgezeit
 let a = 2;      //Beschleunigung
 let b = 3;      //komfortable Bremsverzögerung
-let bmax = 6;   //max. Bremsverzögerung
+let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
 let timewarp = 4;
-let spawnProb = 0.02*timewarp;
+let spawnProb = 0.02 * timewarp;
 let dt = timewarp / fps;
-let phaseLength = 100;
+let phaseLength = 10;
 
-let road = new Road(rand, v0);
+let road = new Road(rand, v0, bmax);
 
 function calcAcc(s, v, vl, al, slowed) {
 
     let accNoise = a * (rand() * 0.02 - 0.01);
 
     // actual IDM model
-    let slower = slowed? 0.01:1;
+    let slower = slowed ? 0.01 : 1;
     //Beschleinigung auf freier Strecke
-    var accFree = (v < v0) ? a * (1 - Math.pow(v / (v0*slower), 4))
+    var accFree = (v < v0) ? a * (1 - Math.pow(v / (v0 * slower), 4))
         : a * (1 - v / v0);
     //s* ist Wunschabstand
     var sstar = s0 + Math.max(0, v * T + 0.5 * v * (v - vl) / Math.sqrt(a * b));
@@ -65,66 +65,71 @@ function update_psa(road) {
             let leadVeh;
 
             if (veh.lead) {
-              
-                    leadVeh = veh.lead.veh;
-                    s = veh.lead.relPos + leadVeh.position - leadVeh.len - veh.position;
-                    leadSpeed = leadVeh.speed;
-                    leadAcc = leadVeh.acc ;
+
+                leadVeh = veh.lead.veh;
+                s = veh.lead.relPos + leadVeh.position - leadVeh.len - veh.position;
+                leadSpeed = leadVeh.speed;
+                leadAcc = leadVeh.acc;
 
             } else {
                 s = 100000;
                 leadSpeed = 0;
                 leadAcc = 0;
             }
-            
+
             veh.acc = calcAcc(s, veh.speed, leadSpeed, leadAcc, veh.slowed)
             veh.position += Math.max(0, veh.speed * dt + 0.5 * veh.acc * dt * dt);
-    
+
             veh.speed = Math.max(veh.speed + veh.acc * dt, 0);
 
             //move to next segment
-    
+
             if (veh.position > road.segments[veh.segment].arclength) {
 
                 //das muss umgestaltet werden wenn mehr als ein Segment hier zusammen laufen
                 // dann muss man die neuen Autos in der Reihenfolge in der sie im neuen Segment treffen
                 //in einem Zwischenschritt einordnen (sprich gesucht ist Zeitspanne des Wegstücks bis Ende altes
                 //Segment). Und dann davon ausgehend eventuelle Kollisionen überprüfen
-                
+
 
                 if (road.segments[veh.segment].after.length > 0) {
                     veh.position = veh.position - road.segments[veh.segment].arclength;
                     veh.segment = segment.after[0];
                     road.segments[segment.after[0]].vehicles.unshift(veh);
-                } 
+                }
                 vehicles.splice(i, 1);
-    
+
             }
             if (veh.slowed) {
-               veh.slowedCounter--;
-               if (veh.slowedCounter<1) {
-                veh.color="gold";
-                veh.slowed=false;
-               }
+                veh.slowedCounter--;
+                if (veh.slowedCounter < 1) {
+                    veh.color = "gold";
+                    veh.slowed = false;
+                }
             }
         }
-        if (veh.type==VEH_TYPES.TRAFFIC_LIGHT) {
+        if (veh.type == VEH_TYPES.TRAFFIC_LIGHT) {
             if (veh.tf.counter == 0) {
-                veh.tf.state = (veh.tf.state == "green") ? "red":"green"
+                veh.tf.state = (veh.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (veh.tf.state == TL_STATES.YELLOW)? TL_STATES.RED : TL_STATES.GREEN
             }
-            veh.tf.counter =  ( veh.tf.counter -1 ) % phaseLength
+            if (veh.tf.state == TL_STATES.YELLOW) {
+                veh.tf.counter = (veh.tf.counter - 1) % (Math.floor(Math.max(1,0.36*v0 -1.97) *fps))
+            } else {
+                veh.tf.counter = (veh.tf.counter - 1) % (phaseLength *fps)
+            }
+            
         }
     })
     )
-    road.segments.forEach((segment) => segment.vehicles.forEach((veh,i,vehicles) => {
+    road.segments.forEach((segment) => segment.vehicles.forEach((veh, i, vehicles) => {
         //testing for collision
-        if (veh.type == VEH_TYPES.CAR && veh.lead && veh.lead.veh.type == VEH_TYPES.CAR 
-        && veh.lead.veh.segment == veh.segment 
-        && veh.position > veh.lead.veh.position - veh.lead.veh.len) {
+        if (veh.type == VEH_TYPES.CAR && veh.lead && veh.lead.veh.type == VEH_TYPES.CAR
+            && veh.lead.veh.segment == veh.segment
+            && veh.position > veh.lead.veh.position - veh.lead.veh.len) {
             veh.speed = 0;
             veh.lead.speed = 0;
             veh.collided = veh.lead.veh.collided = true
-        } 
+        }
     }))
 }
 
@@ -158,30 +163,31 @@ function main_loop() {
 }
 
 function onclick(event) {
-    var x = event.pageX - canvasLeft,
-    y = event.pageY - canvasTop;
+    let x = event.pageX - canvasLeft,
+        y = event.pageY - canvasTop;
 
 
-
-
-
-road.drawnVehicles.forEach(function(vehicle) {
-    if (y > vehicle.y - vehicle.veh.width*3 && y < vehicle.y + vehicle.veh.width*3
-        && x > vehicle.x - vehicle.veh.len*3 && x < vehicle.x + vehicle.veh.len*3) {
+    road.drawnVehicles.forEach(function (vehicle) {
+        if (y > vehicle.y - vehicle.veh.width * 3 && y < vehicle.y + vehicle.veh.width * 3
+            && x > vehicle.x - vehicle.veh.len * 3 && x < vehicle.x + vehicle.veh.len * 3) {
             let clickedVehicle = vehicle.veh;
             if (clickedVehicle.type == VEH_TYPES.CAR) {
                 clickedVehicle.color = "red";
-                clickedVehicle.slowed=true;
-                clickedVehicle.slowedCounter=300/timewarp;
-            } else if (clickedVehicle.type==VEH_TYPES.TRAFFIC_LIGHT) {
-                clickedVehicle.tf.state = clickedVehicle.tf.state == "red"? "green" : "red"
+                clickedVehicle.slowed = true;
+                clickedVehicle.slowedCounter = 300 / timewarp;
+            } else if (clickedVehicle.type == VEH_TYPES.TRAFFIC_LIGHT) {
+                clickedVehicle.tf.state = (clickedVehicle.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (clickedVehicle.tf.state == TL_STATES.YELLOW)? TL_STATES.RED : TL_STATES.GREEN;
+                if (clickedVehicle.tf.state == TL_STATES.YELLOW) {
+                    clickedVehicle.tf.counter = (Math.floor(Math.max(1,0.36*v0 - 1.97) *fps))
+                }
+                clickedVehicle.tf.counter = phaseLength * fps
             }
 
-    }
-});
+        }
+    });
 }
 
-let     canvasLeft = canvas.offsetLeft + canvas.clientLeft,
+let canvasLeft = canvas.offsetLeft + canvas.clientLeft,
     canvasTop = canvas.offsetTop + canvas.clientTop;
 
 
