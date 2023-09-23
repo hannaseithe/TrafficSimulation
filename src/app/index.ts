@@ -1,6 +1,7 @@
 import { prng } from './prng';
 import { Road } from './road';
 import { draw } from './draw';
+import { VEH_TYPES } from './types';
 
 
 /*
@@ -33,6 +34,7 @@ let fps = 30;   //Frames per Seconds
 let timewarp = 4;
 let spawnProb = 0.02*timewarp;
 let dt = timewarp / fps;
+let phaseLength = 100;
 
 let road = new Road(rand, v0);
 
@@ -58,7 +60,7 @@ function calcAcc(s, v, vl, al, slowed) {
 //update each vehicle with new position/speed/acceleration (PSA) based on IDM
 function update_psa(road) {
     road.segments.forEach((segment) => segment.vehicles.forEach((veh, i, vehicles) => {
-        if (!veh.collided && veh.type == "car") {
+        if (!veh.collided && veh.type == VEH_TYPES.CAR) {
             let s, leadSpeed, leadAcc;
             let leadVeh;
 
@@ -105,16 +107,18 @@ function update_psa(road) {
                 veh.slowed=false;
                }
             }
-
-        
-
         }
-       
+        if (veh.type==VEH_TYPES.TRAFFIC_LIGHT) {
+            if (veh.tf.counter == 0) {
+                veh.tf.state = (veh.tf.state == "green") ? "red":"green"
+            }
+            veh.tf.counter =  ( veh.tf.counter -1 ) % phaseLength
+        }
     })
     )
     road.segments.forEach((segment) => segment.vehicles.forEach((veh,i,vehicles) => {
         //testing for collision
-        if (veh.type == "car" && veh.lead && veh.lead.veh.type == "car" 
+        if (veh.type == VEH_TYPES.CAR && veh.lead && veh.lead.veh.type == VEH_TYPES.CAR 
         && veh.lead.veh.segment == veh.segment 
         && veh.position > veh.lead.veh.position - veh.lead.veh.len) {
             veh.speed = 0;
@@ -165,11 +169,11 @@ road.drawnVehicles.forEach(function(vehicle) {
     if (y > vehicle.y - vehicle.veh.width*3 && y < vehicle.y + vehicle.veh.width*3
         && x > vehicle.x - vehicle.veh.len*3 && x < vehicle.x + vehicle.veh.len*3) {
             let clickedVehicle = vehicle.veh;
-            if (clickedVehicle.type == "car") {
+            if (clickedVehicle.type == VEH_TYPES.CAR) {
                 clickedVehicle.color = "red";
                 clickedVehicle.slowed=true;
                 clickedVehicle.slowedCounter=300/timewarp;
-            } else if (clickedVehicle.type=="traffic-light") {
+            } else if (clickedVehicle.type==VEH_TYPES.TRAFFIC_LIGHT) {
                 clickedVehicle.tf.state = clickedVehicle.tf.state == "red"? "green" : "red"
             }
 

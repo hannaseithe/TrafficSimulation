@@ -1,8 +1,8 @@
-import { Vehicle } from './vehicle';
+import { TrafficLight, Vehicle } from './vehicle';
 import { StraightSegment, BezierSegment } from './segment';
 export class Road {
     length: number;
-    number_veh = 10;
+    number_veh = 40;
     max_speed;
     segments = [];
     drawnVehicles = [];
@@ -44,9 +44,10 @@ export class Road {
 
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 
-        this.segments[1].vehicles.push(new Vehicle(0, 100, 1, "traffic-light"))
+        this.segments[1].vehicles.push(new TrafficLight(0, 100, 1, "traffic-light",10))
+        this.segments[2].vehicles.push(new TrafficLight(0, 100, 1, "traffic-light",150))
 
-        for (let i = 0; i < this.number_veh; i++) {
+        for (let i = 0; i < Math.min(10,this.number_veh); i++) {
             let new_segment = Math.floor(this.segments.length * rand());
             let new_position = this.noCollisionPos(rand, new_segment);
 

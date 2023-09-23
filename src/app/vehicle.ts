@@ -10,18 +10,26 @@ export class Vehicle {
     color = "gold";
     slowed = false;
     collided = false;
-    constructor (speed,position,segment,type){
-        
+    constructor(speed, position, segment, type) {
+
         this.speed = speed;
         this.position = position;
         this.segment = segment;
         this.type = type;
 
-        if (type == "traffic-light") {
-            this.len = 3;
-            this.tf = {
-                state: "red"
-            }
+
+    }
+}
+
+export class TrafficLight extends Vehicle {
+    constructor(speed, position, segment, type, phase) {
+        super(speed, position, segment, type)
+
+        this.len = 3;
+        this.tf = {
+            state: "red",
+            counter: phase
         }
+
     }
 }
