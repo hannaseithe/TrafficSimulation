@@ -1,6 +1,7 @@
 export const VEH_TYPES = {
     CAR: "car",
-    TRAFFIC_LIGHT: "traffic-light"
+    TRAFFIC_LIGHT: "traffic-light",
+    PEDESTRIAN: "pedestrian"
 }
 export const TL_STATES = {
     GREEN: "green",

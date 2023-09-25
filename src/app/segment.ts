@@ -8,6 +8,7 @@ class Segment {
   after: [];
   arclength: number;
   vehicles = [];
+  pedestrians = [];
   tangent: Function;
   c: Function;
   invert_arcl: Function;
@@ -24,10 +25,10 @@ class Segment {
     degree = point[1] < 0 ? -degree : degree;
     return (degree)
   }
-  drawSegment(ctx) { };
-  drawVehicle(vehicle, ctx,seg_index,veh_index) {
+  drawSegment(ctx, type) { };
+  drawVehicle(vehicle, ctx, seg_index, veh_index) {
     let veh_point = this.c(vehicle.position);
-    let shift = [0,0];
+    let shift = [0, 0];
 
     ctx.save();
 
@@ -35,43 +36,72 @@ class Segment {
     // move the rotation point to the center of the rect
     ctx.translate(veh_point[0], veh_point[1]);
 
-     //calculate the rotation degree
+    //calculate the rotation degree
     // rotate the rect
     let tangent = this.tangent(this.invert_arcl(vehicle.position));
     let degree = this.degree(tangent);
     ctx.rotate(degree);
-    
-    
+
+
     if (vehicle.type == VEH_TYPES.CAR) {
-   
-   
 
-    // draw the rect on the transformed context
 
-    ctx.rect(-vehicle.len/2, -vehicle.width/2, vehicle.len, vehicle.width);
 
-    ctx.fillStyle = vehicle.collided ? "black" : vehicle.color;
-    ctx.fill();
+      // draw the rect on the transformed context
 
-    } else if(vehicle.type== VEH_TYPES.TRAFFIC_LIGHT) {
-      ctx.translate(0,10);
-      ctx.arc(0,0, 3, 0, 2 * Math.PI);
+      ctx.rect(-vehicle.len / 2, -vehicle.width / 2, vehicle.len, vehicle.width);
+
+      ctx.fillStyle = vehicle.collided ? "black" : vehicle.color;
+      ctx.fill();
+
+    } else if (vehicle.type == VEH_TYPES.TRAFFIC_LIGHT) {
+      ctx.translate(0, 10);
+      ctx.arc(0, 0, 3, 0, 2 * Math.PI);
       ctx.fillStyle = vehicle.tf.state;
       ctx.fill();
-      shift = [-10*Math.sin(degree),
-      10*Math.cos(degree)]
-    } 
-    
+      shift = [-10 * Math.sin(degree),
+      10 * Math.cos(degree)]
+    }
+
     // restore the context to its untranslated/unrotated state
     ctx.restore();
     return {
-      x: veh_point[0]+shift[0],
-      y: veh_point[1]+shift[1],
+      x: veh_point[0] + shift[0],
+      y: veh_point[1] + shift[1],
       veh: vehicle,
       degree: degree
     }
   }
-  drawSpeedLimit(position,speed, ctx) {
+
+  drawPedestrian(ped, ctx) {
+    let veh_point = this.c(ped.position);
+
+    ctx.save();
+
+    ctx.beginPath();
+    // move the rotation point to the center of the rect
+    ctx.translate(veh_point[0], veh_point[1]);
+
+    //calculate the rotation degree
+    // rotate the rect
+    let tangent = this.tangent(this.invert_arcl(ped.position));
+    let degree = this.degree(tangent);
+    ctx.rotate(degree);
+    if (ped.direction == -1) {
+      ctx.rotate(Math.PI)
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(0, -3);
+    ctx.lineTo(5, 0);
+    ctx.lineTo(0, 3);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+  }
+
+  drawSpeedLimit(position, speed, ctx) {
     let sign_point = this.c(position);
     ctx.save();
     ctx.beginPath();
@@ -80,34 +110,34 @@ class Segment {
     let degree = this.degree(tangent);
     ctx.rotate(degree);
 
-    ctx.translate(0,15);
-    ctx.arc(0,0, 8, 0, 2 * Math.PI);
+    ctx.translate(0, 15);
+    ctx.arc(0, 0, 8, 0, 2 * Math.PI);
     ctx.fillStyle = "white";
     ctx.fill();
     ctx.strokeStyle = "red";
     ctx.stroke();
     ctx.rotate(-degree);
-   
+
     if (speed == -1) {
-      ctx.rotate(0.25*Math.PI);
-      ctx.moveTo(-1,-6);
-      ctx.lineTo(-1,6);
-      ctx.moveTo(1,-6);
-      ctx.lineTo(1,6);
+      ctx.rotate(0.25 * Math.PI);
+      ctx.moveTo(-1, -6);
+      ctx.lineTo(-1, 6);
+      ctx.moveTo(1, -6);
+      ctx.lineTo(1, 6);
       ctx.strokeStyle = "black";
       ctx.stroke();
     } else {
       ctx.font = "9px Arial bold";
-      ctx.fillStyle= "black";
-      let limit = Math.floor(speed*3.6).toString();
+      ctx.fillStyle = "black";
+      let limit = Math.floor(speed * 3.6).toString();
       if (limit.length == 3) {
         ctx.fillText(limit, -6, 3);
       } else {
         ctx.fillText(limit, -5, 3);
       }
     }
-    
-    
+
+
 
     ctx.restore();
 
@@ -127,30 +157,45 @@ export class StraightSegment extends Segment {
     return t * Math.sqrt(Math.pow(this.end[0] - this.start[0], 2) + Math.pow(this.end[1] - this.start[1], 2))
   }
 
-  invert_arcl= (s) => {
+  invert_arcl = (s) => {
     return s / Math.sqrt(Math.pow(this.end[0] - this.start[0], 2) + Math.pow(this.end[1] - this.start[1], 2))
   }
 
   tangent = () => {
-    return [this.end[0]-this.start[0],this.end[1]-this.start[1]]
+    return [this.end[0] - this.start[0], this.end[1] - this.start[1]]
   }
 
   c = (s) => this.b(this.invert_arcl(s));
 
-  drawSegment(ctx) {
+  drawSegment(ctx, type) {
     ctx.beginPath();
     ctx.moveTo(...this.start);
     ctx.lineTo(...this.end);
+    if (type == "road") {
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 4;
+    } else if (type == "sw") {
+      ctx.lineWidth = 2
+      ctx.strokeStyle = "white";
+    }
     ctx.stroke();
+
   }
 
 }
 
-function segments(points, ctx) {
+function segments(points, ctx, type) {
   ctx.beginPath();
   ctx.moveTo(...points[0]);
   for (let point of points) {
     ctx.lineTo(...point);
+  }
+  if (type == "road") {
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 4;
+  } else if (type == "sw") {
+    ctx.lineWidth = 2
+    ctx.strokeStyle = "white";
   }
   ctx.stroke();
 }
@@ -223,8 +268,8 @@ export class BezierSegment extends Segment {
   //3*d*t^2-3*c*t^2+6*c*(1-t)*t-6*b*(1-t)*t+3*b*(1-t)^2-3*a*(1-t)^2
 
   tangent = (t) => {
-    return [-3*this.start[0]*Math.pow(1-t,2)+3*this.points[0][0]*(Math.pow(1-t,2)-2*t*(1-t))+3*this.points[1][0]*(2*t*(1-t)-t*t)+3*this.end[0]*Math.pow(t,2),
-    -3*this.start[1]*Math.pow(1-t,2)+3*this.points[0][1]*(Math.pow(1-t,2)-2*t*(1-t))+3*this.points[1][1]*(2*t*(1-t)-t*t)+3*this.end[1]*Math.pow(t,2)]
+    return [-3 * this.start[0] * Math.pow(1 - t, 2) + 3 * this.points[0][0] * (Math.pow(1 - t, 2) - 2 * t * (1 - t)) + 3 * this.points[1][0] * (2 * t * (1 - t) - t * t) + 3 * this.end[0] * Math.pow(t, 2),
+    -3 * this.start[1] * Math.pow(1 - t, 2) + 3 * this.points[0][1] * (Math.pow(1 - t, 2) - 2 * t * (1 - t)) + 3 * this.points[1][1] * (2 * t * (1 - t) - t * t) + 3 * this.end[1] * Math.pow(t, 2)]
   }
 
   invert_arcl = (s) => {
@@ -274,7 +319,7 @@ export class BezierSegment extends Segment {
 
 
 
-  drawSegment(ctx, n = 200) {
-    segments([...Array(n + 1).keys()].map(k => this.c((this.arclength) * k / n)), ctx)
+  drawSegment(ctx, type, n = 200) {
+    segments([...Array(n + 1).keys()].map(k => this.c((this.arclength) * k / n)), ctx, type)
   }
 }

@@ -1,7 +1,8 @@
 import { prng } from './prng';
-import { Road } from './road';
 import { draw } from './draw';
 import { VEH_TYPES, TL_STATES } from './types';
+import { TestRoad } from './roads/TestRoad';
+import { PedRoad } from './roads/PedRoad';
 
 
 /*
@@ -31,17 +32,21 @@ let a = 2;      //Beschleunigung
 let b = 3;      //komfortable Bremsverzögerung
 let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
-let timewarp = 4;
+let numberVeh = 5;
+let numberPed = 10;
+let timewarp = 20;
 let spawnProb = 0.02 * timewarp;
 let dt = timewarp / fps;
 let phaseLength = 4.5;
 
 let roadConfig = {
     maxSpeed: v0,
-    b: b
+    b: b,
+    numberVeh: numberVeh,
+    numberPed: numberPed
 }
 
-let road = new Road(rand, roadConfig);
+let road = new PedRoad(rand, roadConfig);
 
 //this is where the Intelligent Driver Model(IDM) is implemented
 function calcAcc(road, veh, s, v, vl, al) {
@@ -139,6 +144,31 @@ function update_psa(road) {
             veh.collided = veh.lead.veh.collided = true
         }
     }))
+    road.swSegments.forEach((segment) => segment.pedestrians.forEach((ped, i, pedestrians)=> {
+        ped.position += ped.direction *(ped.speed * dt + 0.5 * ped.acc * dt * dt);
+
+        if (ped.position > road.swSegments[ped.segment].arclength) {
+            if (segment.after.length > 0) {
+                ped.position = ped.position - road.swSegments[ped.segment].arclength;
+                ped.segment = segment.after[0];
+                road.swSegments[segment.after[0]].pedestrians.unshift(ped);
+            }
+            pedestrians.splice(i, 1);
+
+        }
+        if (ped.position < 0) {
+            if (segment.before.length > 0) {
+                let beforeIndex = segment.before[0]
+                ped.position = road.swSegments[beforeIndex].arclength + ped.position;
+                ped.segment = segment.before[0];
+                road.swSegments[segment.before[0]].pedestrians.push(ped);
+            }
+            pedestrians.splice(i, 1);
+
+        }
+
+        //veh.speed = Math.max(veh.speed + veh.acc * dt, 0);  
+    }))
 }
 
 function update_newVeh(road) {
@@ -149,9 +179,22 @@ function update_newVeh(road) {
     }
 }
 
+function update_newPed(road) {
+    //spawn new vehicles
+    let ped_num = road.getPedestrianNumber();
+    if (ped_num < road.number_ped && rand() < spawnProb ) {
+        road.newPedestrian(rand);
+    }
+}
+
 function update_leadVeh(road) {
     road.sortVehicles();
     road.update_leadVeh();
+}
+
+function update_ped(road) {
+    update_newPed(road);
+    road.sortPed()
 }
 
 
@@ -160,6 +203,7 @@ function update(road) {
     update_psa(road);
     update_newVeh(road);
     update_leadVeh(road);
+    update_ped(road)
 
 }
 
