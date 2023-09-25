@@ -51,20 +51,20 @@ let road = new PedRoad(rand, roadConfig);
 //this is where the Intelligent Driver Model(IDM) is implemented
 function calcAcc(road, veh, s, v, vl, al) {
 
-    let accNoise = (a*veh.aF) * (rand() * 0.02 - 0.01);
+    let accNoise = (a * veh.aF) * (rand() * 0.02 - 0.01);
 
     // actual IDM model
     let slower = veh.slowed ? 0.01 : 1;
-    let localSpeed = road.getSpeedLimit(veh.segment,veh.position);
+    let localSpeed = road.getSpeedLimit(veh.segment, veh.position);
     //Beschleinigung auf freier Strecke
-    var accFree = (v < (localSpeed*veh.v0F)) ? (a*veh.aF) * (1 - Math.pow(v / ((localSpeed*veh.v0F) * slower), 4))
-        : (a*veh.aF) * (1 - v / (localSpeed*veh.v0F));
+    var accFree = (v < (localSpeed * veh.v0F)) ? (a * veh.aF) * (1 - Math.pow(v / ((localSpeed * veh.v0F) * slower), 4))
+        : (a * veh.aF) * (1 - v / (localSpeed * veh.v0F));
     //s* ist Wunschabstand
-    var sstar = (s0*veh.s0F) + Math.max(0, v * (T*veh.TF) + 0.5 * v * (v - vl) / Math.sqrt((a*veh.aF) * (b*veh.bF)));
+    var sstar = (s0 * veh.s0F) + Math.max(0, v * (T * veh.TF) + 0.5 * v * (v - vl) / Math.sqrt((a * veh.aF) * (b * veh.bF)));
     //Anteil an Beschleunigung der durch den Wunschabstand (<Geschwindigkeitsdifferenz) und dem realen Abstand bestimmt wird
-    var accInt = -(a*veh.aF) * Math.pow(sstar / Math.max(s, (s0*veh.s0F)), 2);
+    var accInt = -(a * veh.aF) * Math.pow(sstar / Math.max(s, (s0 * veh.s0F)), 2);
 
-    return ((localSpeed*veh.v0F) < 0.00001) ? 0
+    return ((localSpeed * veh.v0F) < 0.00001) ? 0
         : Math.max(-bmax, accFree + accInt + accNoise);
 }
 
@@ -122,15 +122,15 @@ function update_psa(road) {
         }
         if (veh.type == VEH_TYPES.TRAFFIC_LIGHT) {
             if (veh.tf.counter == 0) {
-                veh.tf.state = (veh.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (veh.tf.state == TL_STATES.YELLOW)? TL_STATES.RED : TL_STATES.GREEN
+                veh.tf.state = (veh.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (veh.tf.state == TL_STATES.YELLOW) ? TL_STATES.RED : TL_STATES.GREEN
             }
             if (veh.tf.state == TL_STATES.YELLOW) {
                 let localSpeed = road.getSpeedLimit(veh.segment, veh.position)
-                veh.tf.counter = (veh.tf.counter - 1) % (Math.floor(Math.max(1,0.36*localSpeed -1.97) *fps))
+                veh.tf.counter = (veh.tf.counter - 1) % (Math.floor(Math.max(1, 0.36 * localSpeed - 1.97) * fps))
             } else {
-                veh.tf.counter = (veh.tf.counter - 1) % (phaseLength *fps)
+                veh.tf.counter = (veh.tf.counter - 1) % (phaseLength * fps)
             }
-            
+
         }
     })
     )
@@ -144,24 +144,66 @@ function update_psa(road) {
             veh.collided = veh.lead.veh.collided = true
         }
     }))
-    road.swSegments.forEach((segment) => segment.pedestrians.forEach((ped, i, pedestrians)=> {
-        ped.position += ped.direction *(ped.speed * dt + 0.5 * ped.acc * dt * dt);
+    road.swSegments.forEach((segment) => segment.pedestrians.forEach((ped, i, pedestrians) => {
+        ped.position += ped.direction * (ped.speed * dt + 0.5 * ped.acc * dt * dt);
 
+        // make choice before junction
+        if (ped.direction == 1
+            && ped.after == -1
+            && segment.after.length > 1
+            && ped.position < road.swSegments[ped.segment].arclength
+            && road.swSegments[ped.segment].arclength - ped.position < 50) {
+            let numberAfter = segment.after.length;
+            ped.after = segment.after[Math.floor(rand() * numberAfter) % numberAfter];
+            let z = 0;
+        }
+
+        if (ped.direction == -1
+            && ped.before == -1
+            && segment.before.length > 1
+            && ped.position > 0
+            && ped.position < 50) {
+            let numberBefore = segment.before.length;
+            ped.before = segment.before[Math.floor(rand() * numberBefore) % numberBefore]
+        }
+
+
+        // move Pedestrian to next segment
         if (ped.position > road.swSegments[ped.segment].arclength) {
             if (segment.after.length > 0) {
-                ped.position = ped.position - road.swSegments[ped.segment].arclength;
-                ped.segment = segment.after[0];
-                road.swSegments[segment.after[0]].pedestrians.unshift(ped);
+                let oldSegment = ped.segment;
+
+                ped.segment = ped.after != -1 ? ped.after : segment.after[0];
+                ped.after = -1
+                if (JSON.stringify(road.swSegments[ped.segment].start) == JSON.stringify(road.swSegments[oldSegment].end)) {
+                    ped.position = ped.position - road.swSegments[ped.segment].arclength;
+                    road.swSegments[ped.segment].pedestrians.unshift(ped);
+                } else {
+                    ped.position = road.swSegments[ped.segment].arclength - ped.position;
+                    ped.direction = - ped.direction
+                    road.swSegments[ped.segment].pedestrians.push(ped);
+
+                }
             }
             pedestrians.splice(i, 1);
 
         }
+
         if (ped.position < 0) {
             if (segment.before.length > 0) {
-                let beforeIndex = segment.before[0]
-                ped.position = road.swSegments[beforeIndex].arclength + ped.position;
-                ped.segment = segment.before[0];
-                road.swSegments[segment.before[0]].pedestrians.push(ped);
+                let oldSegment = ped.segment;
+                ped.segment = ped.before != -1 ? ped.before : segment.before[0];
+                ped.before = -1;
+
+                if (JSON.stringify(road.swSegments[ped.segment].end) == JSON.stringify(road.swSegments[oldSegment].start)) {
+                    ped.position = road.swSegments[ped.segment].arclength + ped.position;
+                    road.swSegments[ped.segment].pedestrians.push(ped);
+                } else {
+                    ped.position = - ped.position;
+                    ped.direction = - ped.direction 
+                    road.swSegments[ped.segment].pedestrians.unshift(ped);
+
+                }
             }
             pedestrians.splice(i, 1);
 
@@ -182,7 +224,7 @@ function update_newVeh(road) {
 function update_newPed(road) {
     //spawn new vehicles
     let ped_num = road.getPedestrianNumber();
-    if (ped_num < road.number_ped && rand() < spawnProb ) {
+    if (ped_num < road.number_ped && rand() < spawnProb) {
         road.newPedestrian(rand);
     }
 }
@@ -228,10 +270,10 @@ function onclick(event) {
                 clickedVehicle.slowed = true;
                 clickedVehicle.slowedCounter = 300 / timewarp;
             } else if (clickedVehicle.type == VEH_TYPES.TRAFFIC_LIGHT) {
-                clickedVehicle.tf.state = (clickedVehicle.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (clickedVehicle.tf.state == TL_STATES.YELLOW)? TL_STATES.RED : TL_STATES.GREEN;
+                clickedVehicle.tf.state = (clickedVehicle.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (clickedVehicle.tf.state == TL_STATES.YELLOW) ? TL_STATES.RED : TL_STATES.GREEN;
                 if (clickedVehicle.tf.state == TL_STATES.YELLOW) {
                     let localSpeed = road.getSpeedLimit(clickedVehicle.segment, clickedVehicle.position)
-                    clickedVehicle.tf.counter = (Math.floor(Math.max(1,0.36*localSpeed - 1.97) *fps))
+                    clickedVehicle.tf.counter = (Math.floor(Math.max(1, 0.36 * localSpeed - 1.97) * fps))
                 }
                 clickedVehicle.tf.counter = phaseLength * fps
             }

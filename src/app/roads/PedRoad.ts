@@ -27,7 +27,7 @@ export class PedRoad extends Road {
         this.swSegments[0] = new StraightSegment(SWsegment_config_1)
 
         const SWsegment_config_2 = {
-            start: [401, 108],
+            start: [400, 108],
             end: [1000, 108],
             type: 'straight',
             before: [0,2],
@@ -36,8 +36,8 @@ export class PedRoad extends Road {
         this.swSegments[1] = new StraightSegment(SWsegment_config_2)
 
         const SWsegment_config_3 = {
-            start: [401, 108],
-            end: [401, 92],
+            start: [400, 108],
+            end: [400, 92],
             type: 'straight',
             before: [0,1],
             after: [3,4]
@@ -55,7 +55,7 @@ export class PedRoad extends Road {
 
         const SWsegment_config_5 = {
             start: [1000, 92],
-            end: [401, 92],
+            end: [400, 92],
             type: 'straight',
             before: [],
             after: [2,3]

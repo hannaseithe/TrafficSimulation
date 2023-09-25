@@ -79,6 +79,8 @@ export class TrafficLight extends Vehicle {
 
 export class Pedestrian extends Vehicle {
     direction;
+    after = -1;
+    before = -1;
     constructor(speed,position,segment,direction) {
         super(speed,position,segment);
         this.type = VEH_TYPES.PEDESTRIAN;
