@@ -55,7 +55,7 @@ class Segment {
 
     } else if(vehicle.type== VEH_TYPES.TRAFFIC_LIGHT) {
       ctx.translate(0,10);
-      ctx.arc(0,0, 2, 0, 2 * Math.PI);
+      ctx.arc(0,0, 3, 0, 2 * Math.PI);
       ctx.fillStyle = vehicle.tf.state;
       ctx.fill();
       shift = [-10*Math.sin(degree),
@@ -70,6 +70,47 @@ class Segment {
       veh: vehicle,
       degree: degree
     }
+  }
+  drawSpeedLimit(position,speed, ctx) {
+    let sign_point = this.c(position);
+    ctx.save();
+    ctx.beginPath();
+    ctx.translate(sign_point[0], sign_point[1]);
+    let tangent = this.tangent(this.invert_arcl(position));
+    let degree = this.degree(tangent);
+    ctx.rotate(degree);
+
+    ctx.translate(0,15);
+    ctx.arc(0,0, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.strokeStyle = "red";
+    ctx.stroke();
+    ctx.rotate(-degree);
+   
+    if (speed == -1) {
+      ctx.rotate(0.25*Math.PI);
+      ctx.moveTo(-1,-6);
+      ctx.lineTo(-1,6);
+      ctx.moveTo(1,-6);
+      ctx.lineTo(1,6);
+      ctx.strokeStyle = "black";
+      ctx.stroke();
+    } else {
+      ctx.font = "9px Arial bold";
+      ctx.fillStyle= "black";
+      let limit = Math.floor(speed*3.6).toString();
+      if (limit.length == 3) {
+        ctx.fillText(limit, -6, 3);
+      } else {
+        ctx.fillText(limit, -5, 3);
+      }
+    }
+    
+    
+
+    ctx.restore();
+
   }
 }
 

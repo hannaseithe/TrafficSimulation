@@ -24,7 +24,7 @@ create Road
 
 
 
-let v0 = 30;    //Wunschgeschwindigkeit
+let v0 = 50;    //Wunschgeschwindigkeit
 let s0 = 2;     //Mindestabstand
 let T = 1.8;    //Folgezeit
 let a = 2;      //Beschleunigung
@@ -34,7 +34,7 @@ let fps = 30;   //Frames per Seconds
 let timewarp = 4;
 let spawnProb = 0.02 * timewarp;
 let dt = timewarp / fps;
-let phaseLength = 11;
+let phaseLength = 4.5;
 
 let roadConfig = {
     maxSpeed: v0,
@@ -44,21 +44,22 @@ let roadConfig = {
 let road = new Road(rand, roadConfig);
 
 //this is where the Intelligent Driver Model(IDM) is implemented
-function calcAcc(veh, s, v, vl, al) {
+function calcAcc(road, veh, s, v, vl, al) {
 
     let accNoise = (a*veh.aF) * (rand() * 0.02 - 0.01);
 
     // actual IDM model
     let slower = veh.slowed ? 0.01 : 1;
+    let localSpeed = road.getSpeedLimit(veh.segment,veh.position);
     //Beschleinigung auf freier Strecke
-    var accFree = (v < (v0*veh.v0F)) ? (a*veh.aF) * (1 - Math.pow(v / ((v0*veh.v0F) * slower), 4))
-        : (a*veh.aF) * (1 - v / (v0*veh.v0F));
+    var accFree = (v < (localSpeed*veh.v0F)) ? (a*veh.aF) * (1 - Math.pow(v / ((localSpeed*veh.v0F) * slower), 4))
+        : (a*veh.aF) * (1 - v / (localSpeed*veh.v0F));
     //s* ist Wunschabstand
     var sstar = (s0*veh.s0F) + Math.max(0, v * (T*veh.TF) + 0.5 * v * (v - vl) / Math.sqrt((a*veh.aF) * (b*veh.bF)));
     //Anteil an Beschleunigung der durch den Wunschabstand (<Geschwindigkeitsdifferenz) und dem realen Abstand bestimmt wird
     var accInt = -(a*veh.aF) * Math.pow(sstar / Math.max(s, (s0*veh.s0F)), 2);
 
-    return ((v0*veh.v0F) < 0.00001) ? 0
+    return ((localSpeed*veh.v0F) < 0.00001) ? 0
         : Math.max(-bmax, accFree + accInt + accNoise);
 }
 
@@ -83,7 +84,7 @@ function update_psa(road) {
                 leadAcc = 0;
             }
 
-            veh.acc = calcAcc(veh, s, veh.speed, leadSpeed, leadAcc)
+            veh.acc = calcAcc(road, veh, s, veh.speed, leadSpeed, leadAcc)
             veh.position += Math.max(0, veh.speed * dt + 0.5 * veh.acc * dt * dt);
 
             veh.speed = Math.max(veh.speed + veh.acc * dt, 0);
@@ -119,7 +120,8 @@ function update_psa(road) {
                 veh.tf.state = (veh.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (veh.tf.state == TL_STATES.YELLOW)? TL_STATES.RED : TL_STATES.GREEN
             }
             if (veh.tf.state == TL_STATES.YELLOW) {
-                veh.tf.counter = (veh.tf.counter - 1) % (Math.floor(Math.max(1,0.36*v0 -1.97) *fps))
+                let localSpeed = road.getSpeedLimit(veh.segment, veh.position)
+                veh.tf.counter = (veh.tf.counter - 1) % (Math.floor(Math.max(1,0.36*localSpeed -1.97) *fps))
             } else {
                 veh.tf.counter = (veh.tf.counter - 1) % (phaseLength *fps)
             }
@@ -184,7 +186,8 @@ function onclick(event) {
             } else if (clickedVehicle.type == VEH_TYPES.TRAFFIC_LIGHT) {
                 clickedVehicle.tf.state = (clickedVehicle.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (clickedVehicle.tf.state == TL_STATES.YELLOW)? TL_STATES.RED : TL_STATES.GREEN;
                 if (clickedVehicle.tf.state == TL_STATES.YELLOW) {
-                    clickedVehicle.tf.counter = (Math.floor(Math.max(1,0.36*v0 - 1.97) *fps))
+                    let localSpeed = road.getSpeedLimit(clickedVehicle.segment, clickedVehicle.position)
+                    clickedVehicle.tf.counter = (Math.floor(Math.max(1,0.36*localSpeed - 1.97) *fps))
                 }
                 clickedVehicle.tf.counter = phaseLength * fps
             }

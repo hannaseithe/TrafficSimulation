@@ -8,6 +8,7 @@ export class Road {
     b;
     segments = [];
     drawnVehicles = [];
+    speedLimits = [];
 
 
     constructor(rand, config) {
@@ -39,16 +40,31 @@ export class Road {
             end: [800, 400],
             type: 'bezier',
             before: [1],
-            after: [],
+            after: [3],
             points: [[950, 0], [500, 300]]
         }
 
         this.segments[2] = new BezierSegment(segment_config_3)
 
+        const segment_config_4 = {
+            start: [800, 400],
+            end: [300, 400],
+            type: 'bezier',
+            before: [2],
+            after: [],
+            points: [[1000, 485], [400, 400]]
+        }
+
+        this.segments[3] = new BezierSegment(segment_config_4)
+
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 
         this.segments[1].vehicles.push(new TrafficLight(0, 100, 1,10))
-        this.segments[2].vehicles.push(new TrafficLight(0, 100, 1, 400))
+        this.segments[3].vehicles.push(new TrafficLight(0, 100, 1, 300))
+        this.speedLimits.push({segment:0, position: 250, speed: 20})
+        this.speedLimits.push({segment:1, position: 130, speed: -1})
+        this.speedLimits.push({segment:2, position: 400, speed: 20})
+        this.speedLimits.push({segment:3, position: 130, speed: -1})
 
         for (let i = 0; i < Math.min(10,this.number_veh); i++) {
             let new_segment = Math.floor(this.segments.length * rand());
@@ -57,8 +73,8 @@ export class Road {
             let r = rand();
 
             let driver = (r > 0.75) ? DRIV_TYPES.AGG: (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF; 
-
-            this.segments[new_segment].vehicles.push(new Car(this.max_speed * (0.5 + rand() / 2), new_position, new_segment, driver));
+            let localSpeed = this.getSpeedLimit(new_segment,new_position);
+            this.segments[new_segment].vehicles.push(new Car(localSpeed * (0.5 + rand() / 2), new_position, new_segment, driver));
         }
         this.sortVehicles()
         this.update_leadVeh()
@@ -95,6 +111,18 @@ export class Road {
     public canStop(vehicle,distance) {
         let result = ((vehicle.speed ** 2)/(2*this.b * vehicle.bF) ) < distance
         return result;
+    }
+    public getSpeedLimit(segment,position) {
+        if (this.speedLimits.length == 0) {return this.max_speed}
+        else { 
+            let speedLimit = this.max_speed;
+            this.speedLimits.every((limit, i, limits)=> {
+                if (limit.segment > segment || (limit.segment == segment && limit.position > position)) { return false}
+                speedLimit = limit.speed == -1 ? this.max_speed : limit.speed
+                return true;
+            })
+            return speedLimit
+        }
     }
     public update_leadVeh() {
         this.segments.forEach((segment, indexs, segments) => segment.vehicles.forEach((vehicle, indexv, vehicles) => {

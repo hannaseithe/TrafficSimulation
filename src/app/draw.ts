@@ -18,6 +18,12 @@ let drawVehicles = function (road, ctx) {
 })
 }
 
+let drawSpeedLimits = function (road, ctx) {
+    road.speedLimits.forEach((limit) =>{
+        road.segments[limit.segment].drawSpeedLimit(limit.position, limit.speed,ctx)
+    })
+}
+
 export function draw_init(road) {
 
 
@@ -27,5 +33,6 @@ export function draw_init(road) {
 export function draw(road,ctx) {
     drawBackground(ctx);
     drawRoad(road,ctx);
-    drawVehicles(road,ctx)
+    drawVehicles(road,ctx);
+    drawSpeedLimits(road,ctx);
 }
