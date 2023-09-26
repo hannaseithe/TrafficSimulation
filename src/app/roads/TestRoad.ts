@@ -71,4 +71,11 @@ export class TestRoad extends Road {
         this.sortVehicles()
         this.update_leadVeh()
     }
+
+    public newVehicle(rand) {
+        let new_position = 0;
+        let r = rand();
+        let driver = (r > 0.75) ? DRIV_TYPES.AGG: (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF; 
+        this.segments[0].vehicles.unshift(new Car(this.max_speed * (rand() / 2), new_position, 0, driver ))
+    }
 }

@@ -27,25 +27,9 @@ export class Road {
         this.swSegments.forEach((segment) => segment.pedestrians.sort((ped1, ped2) => ped1.position - ped2.position))
     }
 
-    public newVehicle(rand) {
-        let new_position = 0;
-        let r = rand();
-        let driver = (r > 0.75) ? DRIV_TYPES.AGG: (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF; 
-        this.segments[0].vehicles.unshift(new Car(this.max_speed * (rand() / 2), new_position, 0, driver ))
-    }
+    public newVehicle(rand) {}
 
     public newPedestrian(rand) {
-        let r = rand();
-        if (r >0.5) {
-            let new_position = 0;
-            let direction = 1;
-            this.swSegments[0].pedestrians.unshift(new Pedestrian(1 * (0.5 + rand() / 2), new_position, 0, direction ))
-        } else {
-            let new_position = this.swSegments[this.swSegments.length -1].arclength;
-            let direction = -1;
-            this.swSegments[this.swSegments.length -1].pedestrians.push(new Pedestrian(1 * (0.5 + rand() / 2), new_position, 0, direction ))
-        }
-        
     }
 
     public getVehicleNumber() {
@@ -58,6 +42,10 @@ export class Road {
         return this.swSegments
             .map((segment) => segment.pedestrians.length)
             .reduce((acc, cur) => acc + cur, 0)
+    }
+
+    public zebraLink(segment, swSegment) {
+        
     }
 
     public noCollisionPos(rand, segment) {

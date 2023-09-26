@@ -34,7 +34,7 @@ let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
 let numberVeh = 5;
 let numberPed = 10;
-let timewarp = 20;
+let timewarp =30;
 let spawnProb = 0.02 * timewarp;
 let dt = timewarp / fps;
 let phaseLength = 4.5;
@@ -176,10 +176,10 @@ function update_psa(road) {
                 ped.segment = ped.after != -1 ? ped.after : segment.after[0];
                 ped.after = -1
                 if (JSON.stringify(road.swSegments[ped.segment].start) == JSON.stringify(road.swSegments[oldSegment].end)) {
-                    ped.position = ped.position - road.swSegments[ped.segment].arclength;
+                    ped.position = ped.position - road.swSegments[oldSegment].arclength;
                     road.swSegments[ped.segment].pedestrians.unshift(ped);
                 } else {
-                    ped.position = road.swSegments[ped.segment].arclength - ped.position;
+                    ped.position = road.swSegments[ped.segment].arclength - (ped.position-road.swSegments[oldSegment].arclength);
                     ped.direction = - ped.direction
                     road.swSegments[ped.segment].pedestrians.push(ped);
 
@@ -187,9 +187,7 @@ function update_psa(road) {
             }
             pedestrians.splice(i, 1);
 
-        }
-
-        if (ped.position < 0) {
+        } else if (ped.position < 0) {
             if (segment.before.length > 0) {
                 let oldSegment = ped.segment;
                 ped.segment = ped.before != -1 ? ped.before : segment.before[0];

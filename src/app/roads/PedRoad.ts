@@ -62,6 +62,8 @@ export class PedRoad extends Road {
         }
         this.swSegments[4] = new StraightSegment(SWsegment_config_5)
 
+        this.zebraLink(this.segments[0], this.swSegments[2]);
+
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 
         this.speedLimits.push({segment:0, position: 10, speed: 9})
@@ -90,5 +92,35 @@ export class PedRoad extends Road {
 
         this.sortVehicles()
         this.update_leadVeh()
+    }
+
+    public newVehicle(rand) {
+        let new_position = 0;
+        let r = rand();
+        let driver = (r > 0.75) ? DRIV_TYPES.AGG: (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF; 
+        this.segments[0].vehicles.unshift(new Car(this.max_speed * (rand() / 2), new_position, 0, driver ))
+    }
+
+    public newPedestrian(rand) {
+        let r = rand();
+        
+        if (r > 0.75) {
+            let new_position = 0;
+            let direction = 1;
+            this.swSegments[0].pedestrians.unshift(new Pedestrian(1 * (0.5 + rand() / 2), new_position, 0, direction ))
+        } else if (r > 0.5){
+            let new_position = this.swSegments[1].arclength;
+            let direction = -1;
+            this.swSegments[1].pedestrians.push(new Pedestrian(1 * (0.5 + rand() / 2), new_position, 1, direction ))
+        } else if ( r > 0.25) {
+            let new_position = this.swSegments[3].arclength;
+            let direction = -1;
+            this.swSegments[3].pedestrians.push(new Pedestrian(1 * (0.5 + rand() / 2), new_position, 3, direction ))
+        } else {
+            let new_position = 0;
+            let direction = 1;
+            this.swSegments[4].pedestrians.unshift(new Pedestrian(1 * (0.5 + rand() / 2), new_position, 4, direction ))
+        }
+        
     }
 }

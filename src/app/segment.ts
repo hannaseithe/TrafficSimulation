@@ -97,8 +97,8 @@ class Segment {
     ctx.lineTo(0, 3);
     ctx.fill();
     ctx.stroke();
-    ctx.translate(0,20);
-    ctx.fillText(ped.after + " / " + ped.before, 0, 0);
+/*     ctx.translate(0,20);
+    ctx.fillText(ped.after + " / " + ped.before, 0, 0); */
     ctx.restore();
 
   }
