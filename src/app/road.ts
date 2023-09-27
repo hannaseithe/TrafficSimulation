@@ -28,7 +28,7 @@ export class Road {
         this.swSegments.forEach((segment) => segment.pedestrians.sort((ped1, ped2) => ped1.position - ped2.position))
     }
 
-    public newVehicle(rand) {}
+    public newVehicle(rand, spawnProb) {}
 
     public newPedestrian(rand) {
     }
@@ -49,7 +49,7 @@ export class Road {
         let par = segment.computeIntersectionsWithStraight(swSegment.start,swSegment.end);
         let aLS = segment.arcLength(par.tS);
         swSegment.zebra = true;
-        swSegment.zebraLink = { segment: segment};
+        swSegment.zebraSegments.push(segment);
         segment.zebraPosition =  aLS
     }
 

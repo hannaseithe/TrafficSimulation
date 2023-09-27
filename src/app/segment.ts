@@ -12,7 +12,7 @@ class Segment {
   pedestrians = [];
   zebra = false;
   zebraCounter = 0;
-  zebraLink;
+  zebraSegments = [];
   zebraPosition;
   zebraVehicle;
   tangent: Function;
@@ -58,7 +58,7 @@ class Segment {
 
       ctx.rect(-vehicle.len / 2, -vehicle.width / 2, vehicle.len, vehicle.width);
 
-      ctx.fillStyle = vehicle.collided ? "black" : vehicle.color;
+      ctx.fillStyle = vehicle.collided ? "grey" : vehicle.color;
       ctx.fill();
 
     } else if (vehicle.type == VEH_TYPES.TRAFFIC_LIGHT) {
@@ -154,7 +154,7 @@ class Segment {
   increaseZebra() {
     if (this.zebra) {
       if (this.zebraCounter == 0) {
-        this.zebraLink.segment.activateZebra()
+        this.zebraSegments.forEach((segment) => segment.activateZebra())
       }
       this.zebraCounter++
     }
@@ -163,7 +163,7 @@ class Segment {
   decreaseZebra() {
     if (this.zebra) {
       if (this.zebraCounter > 0) {
-        if (this.zebraCounter == 1) { this.zebraLink.segment.deactivateZebra() }
+        if (this.zebraCounter == 1) { this.zebraSegments.forEach((segment) => segment.deactivateZebra()) }
         this.zebraCounter--
       }
     }

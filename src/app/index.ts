@@ -25,7 +25,7 @@ create Road
 
 
 
-let v0 = 50;    //Wunschgeschwindigkeit
+let v0 = 9;    //Wunschgeschwindigkeit
 let s0 = 2;     //Mindestabstand
 let T = 1.8;    //Folgezeit
 let a = 2;      //Beschleunigung
@@ -33,7 +33,7 @@ let b = 3;      //komfortable Bremsverzögerung
 let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
 let numberVeh = 20;
-let numberPed = 10;
+let numberPed = 200;
 let timewarp =10;
 let spawnProb = 0.005 * timewarp;
 let dt = timewarp / fps;
@@ -241,10 +241,9 @@ function update_psa(road) {
 
 function update_newVeh(road) {
     //spawn new vehicles
-    let veh_num = road.getVehicleNumber();
-    if (veh_num < road.number_veh && rand() < spawnProb && (road.segments[0].vehicles.length == 0 || road.segments[0].vehicles[0].position > 30)) {
-        road.newVehicle(rand);
-    }
+    
+        road.newVehicle(rand,spawnProb);
+    
 }
 
 function update_newPed(road) {

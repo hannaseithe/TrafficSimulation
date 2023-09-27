@@ -83,10 +83,13 @@ export class TestRoad extends Road {
         this.update_leadVeh()
     }
 
-    public newVehicle(rand) {
-        let new_position = 0;
-        let r = rand();
-        let driver = (r > 0.75) ? DRIV_TYPES.AGG: (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF; 
-        this.segments[0].vehicles.unshift(new Car(this.max_speed * (rand() / 2), new_position, 0, driver ))
-    }
+    public newVehicle(rand,spawnProb) {
+        let new_segment = Math.floor(this.segments.length * rand());
+        if (this.getVehicleNumber() < this.number_veh && rand() < spawnProb && (this.segments[new_segment].vehicles.length == 0 || this.segments[new_segment].vehicles[0].position > 30)) {
+            let new_position = 0;
+            let r = rand();
+            let driver = (r > 0.75) ? DRIV_TYPES.AGG : (r > 0.5) ? DRIV_TYPES.RES : (r > 0.25) ? DRIV_TYPES.REL : DRIV_TYPES.DEF;
+            this.segments[new_segment].vehicles.unshift(new Car(this.max_speed * (rand() / 2), new_position, new_segment, driver))
+        }
+   }
 }
