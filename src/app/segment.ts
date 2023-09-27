@@ -1,4 +1,5 @@
 import { VEH_TYPES } from "./types";
+import { Zebra } from "./vehicle";
 
 class Segment {
   type: string;
@@ -9,8 +10,14 @@ class Segment {
   arclength: number;
   vehicles = [];
   pedestrians = [];
+  zebra = false;
+  zebraCounter = 0;
+  zebraLink;
+  zebraPosition;
+  zebraVehicle;
   tangent: Function;
   c: Function;
+  b: Function;
   invert_arcl: Function;
   constructor(config) {
     this.type = config.type;
@@ -144,6 +151,35 @@ class Segment {
     ctx.restore();
 
   }
+  increaseZebra() {
+    if (this.zebra) {
+      if (this.zebraCounter == 0) {
+        this.zebraLink.segment.activateZebra()
+      }
+      this.zebraCounter++
+    }
+  }
+
+  decreaseZebra() {
+    if (this.zebra) {
+      if (this.zebraCounter > 0) {
+        if (this.zebraCounter == 1) { this.zebraLink.segment.deactivateZebra() }
+        this.zebraCounter--
+      }
+    }
+  }
+
+  activateZebra() {
+    let newZebra = new Zebra(0, this.zebraPosition, 0);
+    this.zebraVehicle = newZebra;
+    this.vehicles.push(newZebra)
+  }
+
+  deactivateZebra() {
+    let i = this.vehicles.findIndex((vehicle) => vehicle.type == VEH_TYPES.ZEBRA);
+    this.vehicles.splice(i, 1)
+  }
+
 }
 
 export class StraightSegment extends Segment {
@@ -151,7 +187,7 @@ export class StraightSegment extends Segment {
     super(config);
     this.arclength = this.arcLength(1)
   }
-  b(t) {
+  b = (t) => {
     return [this.start[0] + t * (this.end[0] - this.start[0]),
     this.start[1] + t * (this.end[1] - this.start[1])]
   }
@@ -170,20 +206,20 @@ export class StraightSegment extends Segment {
   c = (s) => this.b(this.invert_arcl(s));
 
   computeIntersectionsWithStraight(start, end) {
-    let a = this.start[0]-start[0];       //xs1-xs2
-    let b = this.start[1]-start[1];       //ys1-ys2
+    let a = this.start[0] - start[0];       //xs1-xs2
+    let b = this.start[1] - start[1];       //ys1-ys2
     let c = this.end[0] - this.start[0];  //xe1 - xs2
     let d = end[0] - start[0];            //xe2 - xs2
     let e = this.end[1] - this.start[1];  //ye1 - ys1
     let f = end[1] - start[1];            //ye2-ys2
-    
-    let u = (a*e-b*c)/(d*e-c*f)
-    let t = (u*d-a)/c
+
+    let u = (a * e - b * c) / (d * e - c * f)
+    let t = (u * d - a) / c
 
     return { tS: t, toS: u }
   }
 
-  drawSegment(ctx, type) {
+  drawSegment(ctx, type, zebra = false) {
     ctx.beginPath();
     ctx.moveTo(...this.start);
     ctx.lineTo(...this.end);
@@ -193,8 +229,12 @@ export class StraightSegment extends Segment {
     } else if (type == "sw") {
       ctx.lineWidth = 2
       ctx.strokeStyle = "white";
+      if (zebra) {
+        ctx.setLineDash([3, 3]);
+      }
     }
     ctx.stroke();
+    ctx.setLineDash([]);
 
   }
 
@@ -468,7 +508,7 @@ export class BezierSegment extends Segment {
         return { tS: t, toS: s }
       }
     }
-    return { error: "no-intersection"}
+    return { error: "no-intersection" }
   }
 
 

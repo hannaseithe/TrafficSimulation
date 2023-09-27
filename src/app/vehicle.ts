@@ -87,3 +87,10 @@ export class Pedestrian extends Vehicle {
         this.direction = direction;
     }
 }
+
+export class Zebra extends Vehicle {
+    constructor(speed,position,segment) {
+        super(speed,position,segment);
+        this.type = VEH_TYPES.ZEBRA;
+    }
+}

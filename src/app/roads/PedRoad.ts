@@ -1,6 +1,6 @@
 import { Road } from "../road";
 import { StraightSegment } from "../segment";
-import {  Car, Pedestrian } from "../vehicle";
+import {  Car, Pedestrian, TrafficLight } from "../vehicle";
 import { DRIV_TYPES } from "../types";
 
 export class PedRoad extends Road {
@@ -67,6 +67,7 @@ export class PedRoad extends Road {
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 
         this.speedLimits.push({segment:0, position: 10, speed: 9})
+        this.segments[0].vehicles.push(new TrafficLight(0, 800, 1,10))
         
 
         for (let i = 0; i < Math.min(10,this.number_veh); i++) {

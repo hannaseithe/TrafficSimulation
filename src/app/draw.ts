@@ -10,7 +10,7 @@ let drawRoad = function (road, ctx) {
 
 let drawSidewalk = function (road, ctx) {
     road.swSegments.forEach((segment) => {
-        segment.drawSegment(ctx, "sw")
+        segment.drawSegment(ctx, "sw", segment.zebra)
     })
 }
 

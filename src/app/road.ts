@@ -8,6 +8,7 @@ export class Road {
     b;
     segments = [];
     swSegments = [];
+    zebras = [];
     drawnVehicles = [];
     speedLimits = [];
 
@@ -46,9 +47,24 @@ export class Road {
 
     public zebraLink(segment, swSegment) {
         let par = segment.computeIntersectionsWithStraight(swSegment.start,swSegment.end);
-        let point1 = segment.b(par.tS);
-        let point2 = swSegment.b(par.toS);
-        console.log(point1, point2)
+        let aLS = segment.arcLength(par.tS);
+        swSegment.zebra = true;
+        swSegment.zebraLink = { segment: segment};
+        segment.zebraPosition =  aLS
+    }
+
+    public isAfterZebra(segment) {
+        if (segment.after.length > 0) {
+            return segment.after.find((index) => this.swSegments[index].zebra)
+        }
+        return -1
+    }
+
+    public isBeforeZebra(segment) {
+        if (segment.before.length > 0) {
+            return segment.before.find((index) => this.swSegments[index].zebra)
+        }
+        return -1
     }
 
     public noCollisionPos(rand, segment) {

@@ -32,10 +32,10 @@ let a = 2;      //Beschleunigung
 let b = 3;      //komfortable Bremsverzögerung
 let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
-let numberVeh = 5;
+let numberVeh = 20;
 let numberPed = 10;
-let timewarp =30;
-let spawnProb = 0.02 * timewarp;
+let timewarp =10;
+let spawnProb = 0.005 * timewarp;
 let dt = timewarp / fps;
 let phaseLength = 4.5;
 
@@ -67,7 +67,6 @@ function calcAcc(road, veh, s, v, vl, al) {
     return ((localSpeed * veh.v0F) < 0.00001) ? 0
         : Math.max(-bmax, accFree + accInt + accNoise);
 }
-
 
 //update each vehicle with new position/speed/acceleration (PSA) based on IDM
 function update_psa(road) {
@@ -145,6 +144,7 @@ function update_psa(road) {
         }
     }))
     road.swSegments.forEach((segment) => segment.pedestrians.forEach((ped, i, pedestrians) => {
+        let oldPosition = ped.position;
         ped.position += ped.direction * (ped.speed * dt + 0.5 * ped.acc * dt * dt);
 
         // make choice before junction
@@ -167,7 +167,30 @@ function update_psa(road) {
             ped.before = segment.before[Math.floor(rand() * numberBefore) % numberBefore]
         }
 
+        let zebraAfter = road.isAfterZebra(segment);
+        // activate zebra
+        if (ped.direction == 1
+            && segment.after.length > 1
+            && zebraAfter > -1
+            && ped.position < road.swSegments[ped.segment].arclength
+            && road.swSegments[ped.segment].arclength - ped.position < 10
+            && road.swSegments[ped.segment].arclength - oldPosition >= 10) {
+            road.swSegments[zebraAfter].increaseZebra()
+        }
 
+        let zebraBefore = road.isBeforeZebra(segment);
+
+        if (ped.direction == -1
+            && segment.before.length > 1
+            && zebraBefore > -1
+            && ped.position > 0
+            && ped.position < 10
+            && oldPosition >= 10) {
+            road.swSegments[zebraBefore].increaseZebra()
+        }
+
+
+        
         // move Pedestrian to next segment
         if (ped.position > road.swSegments[ped.segment].arclength) {
             if (segment.after.length > 0) {
@@ -182,8 +205,10 @@ function update_psa(road) {
                     ped.position = road.swSegments[ped.segment].arclength - (ped.position-road.swSegments[oldSegment].arclength);
                     ped.direction = - ped.direction
                     road.swSegments[ped.segment].pedestrians.push(ped);
-
                 }
+                if (road.swSegments[oldSegment].zebra) {
+                    road.swSegments[oldSegment].decreaseZebra()
+                } else if (zebraAfter > -1 && !road.swSegments[ped.segment].zebra) road.swSegments[zebraAfter].decreaseZebra()
             }
             pedestrians.splice(i, 1);
 
@@ -202,6 +227,9 @@ function update_psa(road) {
                     road.swSegments[ped.segment].pedestrians.unshift(ped);
 
                 }
+                if (road.swSegments[oldSegment].zebra) {
+                    road.swSegments[oldSegment].decreaseZebra()
+                } else if (zebraBefore > -1 && !road.swSegments[ped.segment].zebra) { road.swSegments[zebraBefore].decreaseZebra() }
             }
             pedestrians.splice(i, 1);
 
