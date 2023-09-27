@@ -97,8 +97,8 @@ class Segment {
     ctx.lineTo(0, 3);
     ctx.fill();
     ctx.stroke();
-/*     ctx.translate(0,20);
-    ctx.fillText(ped.after + " / " + ped.before, 0, 0); */
+    /*     ctx.translate(0,20);
+        ctx.fillText(ped.after + " / " + ped.before, 0, 0); */
     ctx.restore();
 
   }
@@ -168,6 +168,20 @@ export class StraightSegment extends Segment {
   }
 
   c = (s) => this.b(this.invert_arcl(s));
+
+  computeIntersectionsWithStraight(start, end) {
+    let a = this.start[0]-start[0];       //xs1-xs2
+    let b = this.start[1]-start[1];       //ys1-ys2
+    let c = this.end[0] - this.start[0];  //xe1 - xs2
+    let d = end[0] - start[0];            //xe2 - xs2
+    let e = this.end[1] - this.start[1];  //ye1 - ys1
+    let f = end[1] - start[1];            //ye2-ys2
+    
+    let u = (a*e-b*c)/(d*e-c*f)
+    let t = (u*d-a)/c
+
+    return { tS: t, toS: u }
+  }
 
   drawSegment(ctx, type) {
     ctx.beginPath();
@@ -318,6 +332,144 @@ export class BezierSegment extends Segment {
   tangentLength = speed_con(this.b_dev);
   arcLength = arcLength_con(this.tangentLength);
   c = s => this.b(this.invert_arcl(s))
+
+  bezierCoeffs() {
+    var Z = Array();
+    //-P0 + 3*P1 + -3*P2 + P3
+    Z[0] = [-this.start[0] + 3 * this.points[0][0] - 3 * this.points[1][0] + this.end[0],
+    -this.start[1] + 3 * this.points[0][1] - 3 * this.points[1][1] + this.end[1]]
+    //3 * P0 - 6 * P1 + 3 * P2;
+    Z[1] = [3 * this.start[0] - 6 * this.points[0][0] + 3 * this.points[1][0],
+    3 * this.start[1] - 6 * this.points[0][1] + 3 * this.points[1][1]]
+    //-3 * P0 + 3 * P1
+    Z[2] = [-3 * this.start[0] + 3 * this.points[0][0],
+    -3 * this.start[1] + 3 * this.points[0][1]];
+    //P0
+    Z[3] = this.start;
+    return Z;
+  }
+
+  sgn(x) {
+    if (x < 0.0) return -1;
+    return 1;
+  }
+
+  sortSpecial(a) {
+    var flip;
+    var temp;
+
+    do {
+      flip = false;
+      for (var i = 0; i < a.length - 1; i++) {
+        if ((a[i + 1] >= 0 && a[i] > a[i + 1]) ||
+          (a[i] < 0 && a[i + 1] >= 0)) {
+          flip = true;
+          temp = a[i];
+          a[i] = a[i + 1];
+          a[i + 1] = temp;
+
+        }
+      }
+    } while (flip);
+    return a;
+  }
+
+  cubicRoots(P) {
+    var a = P[0];
+    var b = P[1];
+    var c = P[2];
+    var d = P[3];
+
+    var A = b / a;
+    var B = c / a;
+    var C = d / a;
+
+    var Q, R, D, S, T, Im;
+
+    Q = (3 * B - Math.pow(A, 2)) / 9;
+    R = (9 * A * B - 27 * C - 2 * Math.pow(A, 3)) / 54;
+    D = Math.pow(Q, 3) + Math.pow(R, 2);    // polynomial discriminant
+
+    var t = Array();
+
+    if (D >= 0)                                 // complex or duplicate roots
+    {
+      S = this.sgn(R + Math.sqrt(D)) * Math.pow(Math.abs(R + Math.sqrt(D)), (1 / 3));
+      T = this.sgn(R - Math.sqrt(D)) * Math.pow(Math.abs(R - Math.sqrt(D)), (1 / 3));
+
+      t[0] = -A / 3 + (S + T);                    // real root
+      t[1] = -A / 3 - (S + T) / 2;                  // real part of complex root
+      t[2] = -A / 3 - (S + T) / 2;                  // real part of complex root
+      Im = Math.abs(Math.sqrt(3) * (S - T) / 2);    // complex part of root pair   
+
+      /*discard complex roots*/
+      if (Im != 0) {
+        t[1] = -1;
+        t[2] = -1;
+      }
+
+    }
+    else                                          // distinct real roots
+    {
+      var th = Math.acos(R / Math.sqrt(-Math.pow(Q, 3)));
+
+      t[0] = 2 * Math.sqrt(-Q) * Math.cos(th / 3) - A / 3;
+      t[1] = 2 * Math.sqrt(-Q) * Math.cos((th + 2 * Math.PI) / 3) - A / 3;
+      t[2] = 2 * Math.sqrt(-Q) * Math.cos((th + 4 * Math.PI) / 3) - A / 3;
+      Im = 0.0;
+    }
+
+    /*discard out of spec roots*/
+    for (var i = 0; i < 3; i++)
+      if (t[i] < 0 || t[i] > 1.0) t[i] = -1;
+
+    /*sort but place -1 at the end*/
+    t = this.sortSpecial(t);
+
+    console.log(t[0] + " " + t[1] + " " + t[2]);
+    return t;
+  }
+
+  computeIntersectionsWithStraight(start, end) {
+    var X = Array();
+
+    var A = end[1] - start[1];	    //A=y2-y1
+    var B = end[0] - start[0];	    //B=x1-x2
+    var C = start[0] * (start[1] - end[1]) +
+      start[1] * (end[0] - start[0]);	//C=x1*(y1-y2)+y1*(x2-x1)
+
+    let b = this.bezierCoeffs();
+
+    var P = Array();
+    P[0] = A * b[0][0] + B * b[0][1];		/*t^3*/
+    P[1] = A * b[1][0] + B * b[1][1];		/*t^2*/
+    P[2] = A * b[2][0] + B * b[2][1];		/*t*/
+    P[3] = A * b[3][0] + B * b[3][1] + C;	/*1*/
+
+    var r = this.cubicRoots(P);
+    let t;
+    /*verify the roots are in bounds of the linear segment*/
+    for (var i = 0; i < 3; i++) {
+      t = r[i];
+
+      X[0] = b[0][0] * t * t * t + b[1][0] * t * t + b[2][0] * t + b[3][0];
+      X[1] = b[0][1] * t * t * t + b[1][1] * t * t + b[2][1] * t + b[3][1];
+
+      /*above is intersection point assuming infinitely long line segment,
+        make sure we are also in bounds of the line*/
+      var s;
+      if ((end[0] - start[0]) != 0)           /*if not vertical line*/
+        s = (X[0] - start[0]) / (end[0] - start[0]);
+      else
+        s = (X[1] - start[1]) / (end[1] - start[1]);
+
+      /*in bounds?*/
+      if (t >= 0 && t <= 1.0 && s >= 0 && s <= 1.0) {
+        return { tS: t, toS: s }
+      }
+    }
+    return { error: "no-intersection"}
+  }
 
 
 

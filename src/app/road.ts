@@ -45,7 +45,10 @@ export class Road {
     }
 
     public zebraLink(segment, swSegment) {
-        
+        let par = segment.computeIntersectionsWithStraight(swSegment.start,swSegment.end);
+        let point1 = segment.b(par.tS);
+        let point2 = swSegment.b(par.toS);
+        console.log(point1, point2)
     }
 
     public noCollisionPos(rand, segment) {
