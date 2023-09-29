@@ -44,10 +44,34 @@ export class TestRoad extends Road {
             type: 'bezier',
             before: [2],
             after: [],
-            points: [[1000, 485], [400, 400]]
+            points: [[1000, 487], [400, 500]]
         }
 
         this.segments[3] = new BezierSegment(segment_config_4)
+
+        const segment_config_5 = {
+            type: 'projected',
+            before: [],
+            after: [5]
+        }
+
+        this.segments[4] = this.segments[1].computeOrthogenalProjection(6, segment_config_5 );
+
+        const segment_config_6 = {
+            type: 'projected',
+            before: [4],
+            after: [6]
+        }
+
+        this.segments[5] = this.segments[2].computeOrthogenalProjection(6, segment_config_6 );
+
+        const segment_config_7 = {
+            type: 'projected',
+            before: [5],
+            after: []
+        }
+
+        this.segments[6] = this.segments[3].computeOrthogenalProjection(6, segment_config_7 );
 
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
 

@@ -34,8 +34,8 @@ let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
 let numberVeh = 200;
 let numberPed = 10;
-let timewarp =10;
-let spawnProb = 0.001 * timewarp;
+let timewarp = 2;
+let spawnProb = 0.01 * timewarp;
 let dt = timewarp / fps;
 let phaseLength = 20;
 
