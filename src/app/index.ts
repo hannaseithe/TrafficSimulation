@@ -25,19 +25,19 @@ create Road
 
 
 
-let v0 = 9;    //Wunschgeschwindigkeit
+let v0 = 30;    //Wunschgeschwindigkeit
 let s0 = 2;     //Mindestabstand
 let T = 1.8;    //Folgezeit
 let a = 2;      //Beschleunigung
 let b = 3;      //komfortable Bremsverzögerung
 let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
-let numberVeh = 20;
-let numberPed = 200;
+let numberVeh = 200;
+let numberPed = 10;
 let timewarp =10;
-let spawnProb = 0.005 * timewarp;
+let spawnProb = 0.001 * timewarp;
 let dt = timewarp / fps;
-let phaseLength = 4.5;
+let phaseLength = 20;
 
 let roadConfig = {
     maxSpeed: v0,
@@ -46,7 +46,7 @@ let roadConfig = {
     numberPed: numberPed
 }
 
-let road = new PedRoad(rand, roadConfig);
+let road = new TestRoad(rand, roadConfig);
 
 //this is where the Intelligent Driver Model(IDM) is implemented
 function calcAcc(road, veh, s, v, vl, al) {
@@ -125,9 +125,9 @@ function update_psa(road) {
             }
             if (veh.tf.state == TL_STATES.YELLOW) {
                 let localSpeed = road.getSpeedLimit(veh.segment, veh.position)
-                veh.tf.counter = (veh.tf.counter - 1) % (Math.floor(Math.max(1, 0.36 * localSpeed - 1.97) * fps))
+                veh.tf.counter = (veh.tf.counter - 1) % (Math.floor(Math.max(1, 0.36 * localSpeed - 1.97) * fps / timewarp))
             } else {
-                veh.tf.counter = (veh.tf.counter - 1) % (phaseLength * fps)
+                veh.tf.counter = (veh.tf.counter - 1) % (phaseLength * fps / timewarp)
             }
 
         }
@@ -298,9 +298,9 @@ function onclick(event) {
                 clickedVehicle.tf.state = (clickedVehicle.tf.state == TL_STATES.GREEN) ? TL_STATES.YELLOW : (clickedVehicle.tf.state == TL_STATES.YELLOW) ? TL_STATES.RED : TL_STATES.GREEN;
                 if (clickedVehicle.tf.state == TL_STATES.YELLOW) {
                     let localSpeed = road.getSpeedLimit(clickedVehicle.segment, clickedVehicle.position)
-                    clickedVehicle.tf.counter = (Math.floor(Math.max(1, 0.36 * localSpeed - 1.97) * fps))
+                    clickedVehicle.tf.counter = (Math.floor(Math.max(1, 0.36 * localSpeed - 1.97) * fps / timewarp))
                 }
-                clickedVehicle.tf.counter = phaseLength * fps
+                clickedVehicle.tf.counter = phaseLength * fps / timewarp
             }
 
         }

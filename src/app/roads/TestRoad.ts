@@ -7,14 +7,6 @@ export class TestRoad extends Road {
     constructor(rand, config) {
         super(rand,config);
 
-        const SWsegment_config_1 = {
-            start: [0, 108],
-            end: [400, 108],
-            type: 'straight',
-            before: [],
-            after: [1,2]
-        }
-        this.swSegments[0] = new StraightSegment(SWsegment_config_1);
         const segment_config_1 = {
             start: [100, 100],
             end: [400, 200],
@@ -58,8 +50,6 @@ export class TestRoad extends Road {
         this.segments[3] = new BezierSegment(segment_config_4)
 
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
-
-        this.zebraLink(this.segments[0], this.swSegments[0]);
 
         this.segments[1].vehicles.push(new TrafficLight(0, 100, 1,10))
         this.segments[3].vehicles.push(new TrafficLight(0, 100, 1, 300))

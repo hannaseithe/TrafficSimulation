@@ -5,6 +5,9 @@ let drawBackground = function (ctx) {
 let drawRoad = function (road, ctx) {
     road.segments.forEach((segment) => {
         segment.drawSegment(ctx, "road")
+        if (segment.op) {
+            segment.drawOP(ctx,"road")
+        }
     })
 }
 

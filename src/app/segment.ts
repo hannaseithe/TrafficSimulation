@@ -99,9 +99,9 @@ class Segment {
     }
 
     ctx.beginPath();
-    ctx.moveTo(0, -3);
-    ctx.lineTo(5, 0);
-    ctx.lineTo(0, 3);
+    ctx.moveTo(0, -2);
+    ctx.lineTo(4, 0);
+    ctx.lineTo(0, 2);
     ctx.fill();
     ctx.stroke();
     /*     ctx.translate(0,20);
@@ -310,10 +310,15 @@ let arcLength_con = f => t => numerically_integrate1(f, 0, t)
 
 export class BezierSegment extends Segment {
   points;
+  op;
+  alOP;
   constructor(config) {
     super(config);
     this.points = config.points;
-    this.arclength = this.arcLength(1)
+    this.arclength = this.arcLength(1);
+    this.op = this.computeOrthogenalProjection(6);
+  this.alOP = (s) => this.op(this.invert_arcl(s));
+
   }
 
   b = (t) => {
@@ -371,20 +376,23 @@ export class BezierSegment extends Segment {
   b_dev = derivative_con(this.b);
   tangentLength = speed_con(this.b_dev);
   arcLength = arcLength_con(this.tangentLength);
-  c = s => this.b(this.invert_arcl(s))
+  c = s => this.b(this.invert_arcl(s));
+ /*  op = this.computeOrthogenalProjection(20);
+  alOP = (s) => this.op(this.invert_arcl(s)); */
+
 
   bezierCoeffs() {
     var Z = Array();
-    //-P0 + 3*P1 + -3*P2 + P3
+    //-P0 + 3*P1 + -3*P2 + P3 => t**3
     Z[0] = [-this.start[0] + 3 * this.points[0][0] - 3 * this.points[1][0] + this.end[0],
     -this.start[1] + 3 * this.points[0][1] - 3 * this.points[1][1] + this.end[1]]
-    //3 * P0 - 6 * P1 + 3 * P2;
+    //3 * P0 - 6 * P1 + 3 * P2; => t**2
     Z[1] = [3 * this.start[0] - 6 * this.points[0][0] + 3 * this.points[1][0],
     3 * this.start[1] - 6 * this.points[0][1] + 3 * this.points[1][1]]
-    //-3 * P0 + 3 * P1
+    //-3 * P0 + 3 * P1 => t**1
     Z[2] = [-3 * this.start[0] + 3 * this.points[0][0],
     -3 * this.start[1] + 3 * this.points[0][1]];
-    //P0
+    //P0 => t**0
     Z[3] = this.start;
     return Z;
   }
@@ -511,9 +519,25 @@ export class BezierSegment extends Segment {
     return { error: "no-intersection" }
   }
 
+  computeOrthogenalProjection(dis) {
+    let P = this.bezierCoeffs();
+    return (t) => {
+      let X = t ** 3 * P[0][0] + t ** 2 * P[1][0] + t * P[2][0] + P[3][0];
+      let Y = t ** 3 * P[0][1] + t ** 2 * P[1][1] + t * P[2][1] + P[3][1];
+      let derX = 3 * t**2 * P[0][0] + 2 * t * P[1][0] + P[2][0];
+      let derY = 3 * t**2 * P[0][1] + 2 * t * P[1][1] + P[2][1];
+      return [X + dis * (derY) / Math.sqrt(derX**2 + derY**2),
+      Y + dis * (-derX) / Math.sqrt(derX**2 + derY**2)]
+    }
+  }
+
+  drawOP(ctx,type) {
+    this.drawSegment(ctx,type,this.op,1)
+  }
 
 
-  drawSegment(ctx, type, n = 200) {
-    segments([...Array(n + 1).keys()].map(k => this.c((this.arclength) * k / n)), ctx, type)
+
+  drawSegment(ctx, type, c = this.c, arclength = this.arclength, n = 200) {
+    segments([...Array(n + 1).keys()].map(k => c((arclength) * k / n)), ctx, type)
   }
 }
