@@ -53,30 +53,30 @@ export class TestRoad extends Road {
 
         const segment_config_5 = {
             type: 'projected',
-            startT: 0,
-            endT: 1,
-            before: [6],
-            after: [5]
+            startT: 1,
+            endT: 0,
+            before: [5],
+            after: [6]
         }
 
         this.segments[4] = this.segments[1].computeOrthogenalProjection(6, segment_config_5 );
 
         const segment_config_6 = {
             type: 'projected',
-            startT: 0,
-            endT: 1,
-            before: [4],
-            after: [6]
+            startT: 1,
+            endT: 0,
+            before: [6],
+            after: [4]
         }
 
         this.segments[5] = this.segments[2].computeOrthogenalProjection(6, segment_config_6 );
 
         const segment_config_7 = {
             type: 'projected',
-            startT: 0,
-            endT: 1,
-            before: [5],
-            after: [4]
+            startT: 1,
+            endT: 0,
+            before: [4],
+            after: [5]
         }
 
         this.segments[6] = this.segments[3].computeOrthogenalProjection(6, segment_config_7 );

@@ -641,7 +641,7 @@ export class OPSegment extends Segment {
   computeIntersectionsWithStraight(start, end, zebraSegment) {
     let oResult = this.originalSegment.computeIntersectionsWithStraight(start, end);
     return {
-      tS: oResult.tS - this.startT / (this.endT - this.startT),
+      tS: (oResult.tS - this.startT) / (this.endT - this.startT),
       toS: zebraSegment.invert_arcl(zebraSegment.arcLength(oResult.toS)+this.dis)
     }
   }
