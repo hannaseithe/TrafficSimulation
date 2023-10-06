@@ -89,8 +89,10 @@ export class Pedestrian extends Vehicle {
 }
 
 export class Zebra extends Vehicle {
-    constructor(speed,position,segment) {
+    zIndex;
+    constructor(speed,position,segment,zIndex) {
         super(speed,position,segment);
         this.type = VEH_TYPES.ZEBRA;
+        this.zIndex = zIndex
     }
 }

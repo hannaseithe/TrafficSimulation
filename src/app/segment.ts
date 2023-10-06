@@ -13,7 +13,7 @@ class Segment {
   zebra = false;
   zebraCounter = 0;
   zebraSegments = [];
-  zebraPosition;
+  zebraLinks = [];
   zebraVehicle;
   tangent: Function;
   c: Function;
@@ -151,32 +151,32 @@ class Segment {
     ctx.restore();
 
   }
-  increaseZebra() {
+  increaseZebra(zIndex) { //Method for ZebraSegment
     if (this.zebra) {
       if (this.zebraCounter == 0) {
-        this.zebraSegments.forEach((segment) => segment.activateZebra())
+        this.zebraSegments.forEach((segment) => segment.activateZebra(zIndex))
       }
       this.zebraCounter++
     }
   }
 
-  decreaseZebra() {
+  decreaseZebra(zIndex) {
     if (this.zebra) {
       if (this.zebraCounter > 0) {
-        if (this.zebraCounter == 1) { this.zebraSegments.forEach((segment) => segment.deactivateZebra()) }
+        if (this.zebraCounter == 1) { this.zebraSegments.forEach((segment) => segment.deactivateZebra(zIndex)) }
         this.zebraCounter--
       }
     }
   }
 
-  activateZebra() {
-    let newZebra = new Zebra(0, this.zebraPosition, 0);
+  activateZebra(zIndex) {
+    let newZebra = new Zebra(0, this.zebraLinks.find((link) => link.zIndex == zIndex).position, 0, zIndex);
     this.zebraVehicle = newZebra;
     this.vehicles.push(newZebra)
   }
 
-  deactivateZebra() {
-    let i = this.vehicles.findIndex((vehicle) => vehicle.type == VEH_TYPES.ZEBRA);
+  deactivateZebra(zIndex) {
+    let i = this.vehicles.findIndex((vehicle) => vehicle.type == VEH_TYPES.ZEBRA && vehicle.zIndex ==zIndex);
     this.vehicles.splice(i, 1)
   }
 
@@ -221,8 +221,8 @@ export class StraightSegment extends Segment {
 
   drawSegment(ctx, type, zebra = false) {
     ctx.beginPath();
-    ctx.moveTo(...this.start);
-    ctx.lineTo(...this.end);
+    ctx.moveTo(Math.round(this.start[0]), Math.round(this.start[1]));
+    ctx.lineTo(Math.round(this.end[0]), Math.round(this.end[1]));
     if (type == "road") {
       ctx.strokeStyle = "black";
       ctx.lineWidth = 4;
@@ -240,7 +240,7 @@ export class StraightSegment extends Segment {
 
 }
 
-function segments(points, ctx, type) {
+function segments(points, ctx, type, zebra) {
   ctx.beginPath();
   ctx.moveTo(...points[0]);
   for (let point of points) {
@@ -252,6 +252,9 @@ function segments(points, ctx, type) {
   } else if (type == "sw") {
     ctx.lineWidth = 2
     ctx.strokeStyle = "white";
+    if (zebra) {
+      ctx.setLineDash([3, 3]);
+    }
   }
   ctx.stroke();
 }
@@ -476,7 +479,7 @@ export class BezierSegment extends Segment {
     var X = Array();
 
     var A = end[1] - start[1];	    //A=y2-y1
-    var B = end[0] - start[0];	    //B=x1-x2
+    var B = start[0] - end[0] ;	    //B=x1-x2
     var C = start[0] * (start[1] - end[1]) +
       start[1] * (end[0] - start[0]);	//C=x1*(y1-y2)+y1*(x2-x1)
 
@@ -516,7 +519,8 @@ export class BezierSegment extends Segment {
   computeOrthogenalProjection(dis, config) {
     let P = this.bezierCoeffs();
 
-    let b = (t) => {
+    let b = (tStar) => {
+      let t = tStar * (config.endT - config.startT) + config.startT;
       let X = t ** 3 * P[0][0] + t ** 2 * P[1][0] + t * P[2][0] + P[3][0];
       let Y = t ** 3 * P[0][1] + t ** 2 * P[1][1] + t * P[2][1] + P[3][1];
       let derX = 3 * t ** 2 * P[0][0] + 2 * t * P[1][0] + P[2][0];
@@ -531,20 +535,15 @@ export class BezierSegment extends Segment {
     let arcLength = arcLength_con(tangentLength);
 
 
-    let tangent = (t) => {
+    let tangent = (tStar) => {
+      let t = tStar * (config.endT - config.startT) + config.startT;
       let origTangent = this.tangent(t);
       return [origTangent[0] * tangentLength(t) / this.tangentLength(t),
       origTangent[1] * tangentLength(t) / this.tangentLength(t)]
     }
 
-    let tangentStart = this.tangent(0);
-    let tangentStartLength = this.tangentLength(0);
-    let tangentEnd = this.tangent(1);
-    let tangentEndLength = this.tangentLength(1);
-    let newStart = [this.start[0] + tangentStart[1] * dis / tangentStartLength,
-    this.start[1] - tangentStart[0] * dis / tangentStartLength]
-    let newEnd = [this.end[0] + tangentEnd[1] * dis / tangentEndLength,
-    this.end[1] - tangentEnd[0] * dis / tangentEndLength]
+    let newStart = b(0);
+    let newEnd = b(1)
 
     return new OPSegment({
       b: b,
@@ -556,7 +555,11 @@ export class BezierSegment extends Segment {
       start: newStart,
       end: newEnd,
       before: config.before,
-      after: config.after
+      after: config.after,
+      originalSegment: this,
+      endT: config.endT,
+      startT: config.startT,
+      dis: dis
 
     })
 
@@ -564,8 +567,8 @@ export class BezierSegment extends Segment {
 
 
 
-  drawSegment(ctx, type, c = this.c, arclength = this.arclength, n = 200) {
-    segments([...Array(n + 1).keys()].map(k => c((arclength) * k / n)), ctx, type)
+  drawSegment(ctx, type, zebra = false, c = this.c, arclength = this.arclength, n = 200) {
+    segments([...Array(n + 1).keys()].map(k => c((arclength) * k / n)), ctx, type, zebra)
   }
 }
 
@@ -574,6 +577,10 @@ export class OPSegment extends Segment {
   tangentLength;
   arcLength;
   tangent;
+  originalSegment;
+  startT;
+  endT;
+  dis;
 
   constructor(config) {
     super(config);
@@ -583,7 +590,11 @@ export class OPSegment extends Segment {
     this.arcLength = config.arcLength;
     this.tangent = config.tangent;
     this.arclength = this.arcLength(1);
-    
+    this.originalSegment = config.originalSegment;
+    this.startT = config.startT;
+    this.endT = config.endT;
+    this.dis = config.dis;
+
     this.c = (s) => this.b(this.invert_arcl(s));
   }
 
@@ -627,7 +638,15 @@ export class OPSegment extends Segment {
     return t;
   }
 
-  drawSegment(ctx, type, c = this.c, arclength = this.arclength, n = 200) {
-    segments([...Array(n + 1).keys()].map(k => c((arclength) * k / n)), ctx, type)
+  drawSegment(ctx, type, zebra = false, c = this.c, arclength = this.arclength, n = 200) {
+    segments([...Array(n + 1).keys()].map(k => c((arclength) * k / n)), ctx, type, zebra)
+  }
+
+  computeIntersectionsWithStraight(start, end, zebraSegment) {
+    let oResult = this.originalSegment.computeIntersectionsWithStraight(start, end);
+    return {
+      tS: oResult.tS - this.startT / (this.endT - this.startT),
+      toS: zebraSegment.invert_arcl(zebraSegment.arcLength(oResult.toS)+this.dis)
+    }
   }
 }

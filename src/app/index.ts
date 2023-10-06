@@ -25,7 +25,7 @@ create Road
 
 
 
-let v0 = 30;    //Wunschgeschwindigkeit
+let v0 = 10;    //Wunschgeschwindigkeit
 let s0 = 2;     //Mindestabstand
 let T = 1.8;    //Folgezeit
 let a = 2;      //Beschleunigung
@@ -33,8 +33,8 @@ let b = 3;      //komfortable Bremsverzögerung
 let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
 let numberVeh = 200;
-let numberPed = 10;
-let timewarp = 10;
+let numberPed = 30;
+let timewarp = 5;
 let spawnProb = 0.01 * timewarp;
 let dt = timewarp / fps;
 let phaseLength = 20;
@@ -170,23 +170,23 @@ function update_psa(road) {
         let zebraAfter = road.isAfterZebra(segment);
         // activate zebra
         if (ped.direction == 1
-            && segment.after.length > 1
+            && segment.after.length > 0
             && zebraAfter > -1
             && ped.position < road.swSegments[ped.segment].arclength
             && road.swSegments[ped.segment].arclength - ped.position < 10
             && road.swSegments[ped.segment].arclength - oldPosition >= 10) {
-            road.swSegments[zebraAfter].increaseZebra()
+            road.swSegments[zebraAfter].increaseZebra(zebraAfter)
         }
 
         let zebraBefore = road.isBeforeZebra(segment);
 
         if (ped.direction == -1
-            && segment.before.length > 1
+            && segment.before.length > 0
             && zebraBefore > -1
             && ped.position > 0
             && ped.position < 10
             && oldPosition >= 10) {
-            road.swSegments[zebraBefore].increaseZebra()
+            road.swSegments[zebraBefore].increaseZebra(zebraBefore)
         }
 
 
@@ -207,8 +207,8 @@ function update_psa(road) {
                     road.swSegments[ped.segment].pedestrians.push(ped);
                 }
                 if (road.swSegments[oldSegment].zebra) {
-                    road.swSegments[oldSegment].decreaseZebra()
-                } else if (zebraAfter > -1 && !road.swSegments[ped.segment].zebra) road.swSegments[zebraAfter].decreaseZebra()
+                    road.swSegments[oldSegment].decreaseZebra(oldSegment)
+                } else if (zebraAfter > -1 && !road.swSegments[ped.segment].zebra) road.swSegments[zebraAfter].decreaseZebra(zebraAfter)
             }
             pedestrians.splice(i, 1);
 
@@ -228,8 +228,8 @@ function update_psa(road) {
 
                 }
                 if (road.swSegments[oldSegment].zebra) {
-                    road.swSegments[oldSegment].decreaseZebra()
-                } else if (zebraBefore > -1 && !road.swSegments[ped.segment].zebra) { road.swSegments[zebraBefore].decreaseZebra() }
+                    road.swSegments[oldSegment].decreaseZebra(oldSegment)
+                } else if (zebraBefore > -1 && !road.swSegments[ped.segment].zebra) { road.swSegments[zebraBefore].decreaseZebra(zebraBefore) }
             }
             pedestrians.splice(i, 1);
 

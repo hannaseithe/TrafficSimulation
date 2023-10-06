@@ -45,12 +45,13 @@ export class Road {
             .reduce((acc, cur) => acc + cur, 0)
     }
 
-    public zebraLink(segment, swSegment) {
-        let par = segment.computeIntersectionsWithStraight(swSegment.start,swSegment.end);
+    public zebraLink(segment, zIndex) {
+        let swSegment = this.swSegments[zIndex];
+        let par = segment.computeIntersectionsWithStraight(swSegment.start,swSegment.end,swSegment);
         let aLS = segment.arcLength(par.tS);
         swSegment.zebra = true;
         swSegment.zebraSegments.push(segment);
-        segment.zebraPosition =  aLS
+        segment.zebraLinks.push({zIndex: zIndex, position: aLS})
     }
 
     public isAfterZebra(segment) {
