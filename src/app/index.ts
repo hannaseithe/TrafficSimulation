@@ -34,7 +34,7 @@ let bmax = 8;   //max. Bremsverzögerung
 let fps = 30;   //Frames per Seconds
 let numberVeh = 200;
 let numberPed = 30;
-let timewarp = 5;
+let timewarp = 30;
 let spawnProb = 0.01 * timewarp;
 let dt = timewarp / fps;
 let phaseLength = 20;
@@ -137,6 +137,7 @@ function update_psa(road) {
         //testing for collision
         if (veh.type == VEH_TYPES.CAR && veh.lead && veh.lead.veh.type == VEH_TYPES.CAR
             && veh.lead.veh.segment == veh.segment
+            && veh.lead.relPos == 0
             && veh.position > veh.lead.veh.position - veh.lead.veh.len) {
             veh.speed = 0;
             veh.lead.speed = 0;

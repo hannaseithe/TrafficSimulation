@@ -368,7 +368,6 @@ export class BezierSegment extends Segment {
       }
     }
 
-    console.log('25');
     return t;
   }
 
@@ -471,7 +470,6 @@ export class BezierSegment extends Segment {
     /*sort but place -1 at the end*/
     t = this.sortSpecial(t);
 
-    console.log(t[0] + " " + t[1] + " " + t[2]);
     return t;
   }
 
@@ -633,8 +631,6 @@ export class OPSegment extends Segment {
           t = candidateT;
       }
     }
-
-    console.log('25');
     return t;
   }
 
