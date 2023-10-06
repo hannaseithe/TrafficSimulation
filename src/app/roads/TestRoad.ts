@@ -46,7 +46,7 @@ export class TestRoad extends Road {
             type: 'bezier',
             before: [2],
             after: [1],
-            points: [[1000, 487], [400, 600]]
+            points: [[1100, 500], [400, 600]]
         }
 
         this.segments[3] = new BezierSegment(segment_config_4)
@@ -85,7 +85,7 @@ export class TestRoad extends Road {
             type: 'projected',
             startT: 0,
             endT: 0.5,
-            before: [3],
+            before: [3,16],
             after: [2,4]
         }
         this.swSegments[0] = this.segments[3].computeOrthogenalProjection(12, SWsegment_config_1 );
@@ -94,7 +94,7 @@ export class TestRoad extends Road {
             type: 'projected',
             startT: 0,
             endT: 0.5,
-            before: [3],
+            before: [3,17],
             after: [2,5]
         }
         this.swSegments[1] = this.segments[3].computeOrthogenalProjection(-6, SWsegment_config_2 );
@@ -112,8 +112,8 @@ export class TestRoad extends Road {
             start: this.swSegments[0].start,
             end: this.swSegments[1].start,
             type: 'straight',
-            before: [0],
-            after: [1]
+            before: [0,16],
+            after: [1,17]
         }
         this.swSegments[3] = new StraightSegment(SWsegment_config_4)
 
@@ -122,7 +122,7 @@ export class TestRoad extends Road {
             startT: 0.5,
             endT: 1,
             before: [2,0],
-            after: [6]
+            after: [6,7]
         }
         this.swSegments[4] = this.segments[3].computeOrthogenalProjection(12, SWsegment_config_5 );
 
@@ -131,7 +131,7 @@ export class TestRoad extends Road {
             startT: 0.5,
             endT: 1,
             before: [2,1],
-            after: [6]
+            after: [6,8]
         }
         this.swSegments[5] = this.segments[3].computeOrthogenalProjection(-6, SWsegment_config_6 );
 
@@ -139,8 +139,8 @@ export class TestRoad extends Road {
             start: this.swSegments[4].end,
             end: this.swSegments[5].end,
             type: 'straight',
-            before: [4],
-            after: [5]
+            before: [4,7],
+            after: [5,8]
         }
         this.swSegments[6] = new StraightSegment(SWsegment_config_7)
 
