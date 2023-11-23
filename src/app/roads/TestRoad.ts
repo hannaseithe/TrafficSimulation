@@ -246,7 +246,7 @@ export class TestRoad extends Road {
 
 
         this.length = this.segments.reduce((acc, segment) => acc + segment.arclength, 0)
-
+/* 
         this.zebraLink(this.segments[3], 2);
         this.zebraLink(this.segments[6], 2);
         this.zebraLink(this.segments[3], 3);
@@ -258,7 +258,7 @@ export class TestRoad extends Road {
         this.zebraLink(this.segments[1], 12);
         this.zebraLink(this.segments[4], 12);
         this.zebraLink(this.segments[2], 15);
-        this.zebraLink(this.segments[5], 15);
+        this.zebraLink(this.segments[5], 15); */
 
 
       /*   this.segments[1].vehicles.push(new TrafficLight(0, 100, 1,10))
